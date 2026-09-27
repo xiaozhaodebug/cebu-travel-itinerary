@@ -1,5 +1,3 @@
-import { NextResponse } from 'next/server';
-
 export const config = {
   matcher: ['/((?!_next|api|favicon.ico|.*\\.).*)'],
 };
@@ -9,14 +7,15 @@ export default function middleware(req) {
 
   if (basicAuth) {
     const authValue = basicAuth.split(' ')[1];
-    const [user, pwd] = atob(authValue).split(':');
+    const decoded = atob(authValue);
+    const [user, pwd] = decoded.split(':');
 
     if (user === 'zhaoshao' && pwd === 'ab19990304') {
-      return NextResponse.next();
+      return new Response(null, { status: 200 });
     }
   }
 
-  return new NextResponse('Authentication required', {
+  return new Response('Authentication required', {
     status: 401,
     headers: {
       'WWW-Authenticate': 'Basic realm="Secure Area"',
