@@ -1,0 +1,3000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>菲律宾宿务双轨旅行攻略 · 2026.09.28 - 10.11</title>
+<link rel="stylesheet" href="map/leaflet.css">
+<style>
+  :root {
+    --bg: #FAFBFC;
+    --card-bg: #FFFFFF;
+    --text: #1A1A2E;
+    --text-secondary: #555B6E;
+    --text-muted: #8D93AB;
+    --accent: #E07A5F;
+    --accent-light: #F2CC8F;
+    --ocean: #3D5A80;
+    --ocean-light: #98C1D9;
+    --green: #52B788;
+    --yellow: #E9C46A;
+    --border: #E0E4E8;
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 20px;
+    max-width: none;
+    margin: 0 auto;
+  }
+
+  .page-shell {
+    display: grid;
+    grid-template-columns: 224px minmax(0, 960px);
+    align-items: start;
+    justify-content: center;
+    gap: 24px;
+    max-width: 1208px;
+    margin: 0 auto;
+  }
+  .page-content { min-width: 0; }
+  .toc-sidebar {
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    scrollbar-width: thin;
+  }
+  .toc-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 2px 4px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ocean);
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .toc-toggle {
+    display: none;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ocean);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .toc-nav { padding-top: 8px; }
+  .toc-group-label {
+    padding: 9px 8px 4px;
+    color: var(--text-muted);
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .toc-link {
+    display: block;
+    padding: 6px 8px;
+    border-left: 2px solid transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.35;
+    text-decoration: none;
+  }
+  .toc-link:hover,
+  .toc-link.active {
+    border-left-color: var(--ocean);
+    background: #F0F7FA;
+    color: var(--ocean);
+    font-weight: 700;
+  }
+  .toc-link-day { padding-left: 14px; }
+  [id] { scroll-margin-top: 20px; }
+
+  /* Interactive route map */
+  .route-map-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 24px;
+  }
+  .route-map-intro {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  .map-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+  .map-view-switch {
+    display: inline-flex;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: #F7F9FB;
+  }
+  .map-view-button {
+    min-height: 32px;
+    padding: 5px 11px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .map-view-button.active {
+    background: #FFFFFF;
+    color: var(--ocean);
+    box-shadow: 0 1px 4px rgba(41, 50, 65, 0.12);
+  }
+  .map-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+  .map-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+  .map-line-swatch { width: 22px; height: 3px; border-radius: 2px; }
+  .map-line-flight { background: #D4634B; }
+  .map-line-land { background: #3D5A80; }
+  .map-line-ferry { background: #2A9D8F; }
+  #trip-map {
+    position: relative;
+    width: 100%;
+    height: 560px;
+    overflow: hidden;
+    border: 1px solid #C9D5DE;
+    border-radius: 8px;
+    background: #EAF2F5;
+  }
+  .map-loading {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-align: center;
+  }
+  .route-marker-wrap,
+  .poi-marker-wrap { background: transparent; border: 0; }
+  .route-marker-combo,
+  .poi-marker-combo {
+    display: inline-flex;
+    align-items: center;
+    filter: drop-shadow(0 2px 4px rgba(26, 26, 46, 0.2));
+    white-space: nowrap;
+  }
+  .route-marker {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border: 2px solid #FFFFFF;
+    border-radius: 50%;
+    background: var(--ocean);
+    color: #FFFFFF;
+    box-shadow: 0 2px 7px rgba(26, 26, 46, 0.35);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .route-marker-port {
+    width: 24px;
+    height: 24px;
+    background: #6A7C8F;
+    font-size: 11px;
+  }
+  .poi-marker {
+    display: grid;
+    width: 23px;
+    height: 23px;
+    place-items: center;
+    border: 2px solid #FFFFFF;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(26, 26, 46, 0.28);
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 800;
+  }
+  .route-day-label,
+  .poi-day-label {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    margin-left: -2px;
+    padding: 0 5px;
+    border: 1px solid #C9D5DE;
+    border-left: 0;
+    border-radius: 0 5px 5px 0;
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--ocean);
+    font-size: 9px;
+    font-weight: 800;
+  }
+  .route-day-label { height: 23px; font-size: 9.5px; }
+  .poi-sight { background: #C97A28; }
+  .poi-dive { background: #1687A7; }
+  .poi-local { background: #398564; }
+  .poi-rest { background: #A04D77; }
+  .leaflet-popup-content-wrapper { border-radius: 7px; }
+  .leaflet-popup-content { margin: 12px 14px; min-width: 190px; line-height: 1.55; }
+  .map-popup-day { color: var(--ocean); font-size: 11px; font-weight: 800; }
+  .map-popup-name { margin: 2px 0 4px; color: var(--text); font-size: 14px; font-weight: 800; }
+  .map-popup-time { color: #9A5B19; font-size: 12px; font-weight: 700; }
+  .map-popup-note { margin-top: 4px; color: var(--text-secondary); font-size: 11.5px; }
+  .map-hint {
+    margin: 9px 0 0;
+    color: var(--text-muted);
+    font-size: 11.5px;
+  }
+  .map-marker-guide {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin-top: 14px;
+    border-top: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+  }
+  .map-marker-guide-item {
+    min-width: 0;
+    padding: 10px 12px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .map-marker-guide-item strong { display: block; margin-bottom: 3px; color: var(--text); font-size: 11.5px; }
+  .map-key-symbol {
+    display: inline-grid;
+    width: 22px;
+    height: 22px;
+    place-items: center;
+    margin-right: 4px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    vertical-align: middle;
+  }
+  .map-key-route { background: var(--ocean); }
+  .nondiver-map-summary {
+    margin-top: 16px;
+    padding: 13px 15px;
+    border-left: 3px solid #C97A28;
+    background: #FFF8F0;
+  }
+  .nondiver-map-summary h3 { margin-bottom: 7px; color: #9A5B19; font-size: 13.5px; }
+  .nondiver-map-summary p { color: var(--text-secondary); font-size: 12px; line-height: 1.65; }
+  .nondiver-map-summary strong { color: #7A4312; }
+  .map-daily-title {
+    margin-top: 18px;
+    color: var(--ocean);
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .map-daily-subtitle { margin-top: 3px; color: var(--text-muted); font-size: 11.5px; }
+  .route-stage-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    margin-top: 16px;
+    border-top: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+  }
+  .route-stage {
+    min-width: 0;
+    padding: 14px 16px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .route-stage-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .route-stage-day { color: var(--ocean); font-size: 11.5px; font-weight: 800; }
+  .route-stage-kind { color: var(--text-muted); font-size: 10px; font-weight: 700; }
+  .route-stage-place { margin: 3px 0 7px; color: var(--text); font-size: 13.5px; font-weight: 700; }
+  .route-stage-detail { color: var(--text-secondary); font-size: 11.5px; line-height: 1.6; }
+  .route-stage-detail p { margin: 2px 0; }
+  .route-stage-time { display: inline-block; min-width: 72px; color: #9A5B19; font-weight: 700; }
+  .route-stage-nondiver {
+    margin-top: 7px;
+    padding: 6px 8px;
+    border-left: 2px solid #C97A28;
+    background: #FFF8F0;
+    color: #7A4312;
+    font-size: 11px;
+    line-height: 1.55;
+  }
+  .route-stage-shared {
+    margin-top: 7px;
+    padding: 6px 8px;
+    border-left: 2px solid var(--green);
+    background: #F1F8F4;
+    color: #286044;
+    font-size: 11px;
+    line-height: 1.55;
+  }
+  .map-offline-note {
+    display: block;
+    margin-top: 10px;
+    padding: 9px 12px;
+    border-left: 3px solid var(--yellow);
+    background: #FFFBF0;
+    color: #8A6D1A;
+    font-size: 12px;
+  }
+
+  /* Header */
+  .hero {
+    background: linear-gradient(135deg, var(--ocean) 0%, #293241 100%);
+    color: white;
+    padding: 40px 32px;
+    border-radius: var(--radius);
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .hero h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; }
+  .hero .subtitle { font-size: 15px; opacity: 0.85; margin-bottom: 16px; }
+  .hero .meta { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; font-size: 13px; opacity: 0.9; }
+  .hero .meta span { display: flex; align-items: center; gap: 5px; }
+
+  /* Summary Cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .summary-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    text-align: center;
+  }
+  .summary-card .label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .summary-card .value { font-size: 22px; font-weight: 700; color: var(--ocean); }
+  .summary-card .sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Section */
+  .section-title {
+    font-size: 18px; font-weight: 700;
+    color: var(--ocean);
+    margin: 32px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ocean-light);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .icon { font-size: 20px; }
+
+  /* Day Card */
+  .day-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: linear-gradient(90deg, var(--ocean-light), transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .day-header .day-num {
+    font-weight: 700; font-size: 15px; color: var(--ocean);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .day-header .day-badge {
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    font-weight: 600;
+  }
+  .badge-travel { background: #E8F4FD; color: #2980B9; }
+  .badge-dive { background: #E8F8EE; color: #27AE60; }
+  .badge-sight { background: #FFF8E1; color: #F39C12; }
+  .badge-transit { background: #F3E5F5; color: #8E44AD; }
+  .badge-return { background: #FFEBEE; color: #E74C3C; }
+  .badge-biz { background: #EDE9FE; color: #6D28D9; }
+
+  .day-body { padding: 16px 20px; }
+
+  .route-line {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 600; color: var(--ocean);
+    margin-bottom: 12px; padding: 8px 12px;
+    background: #F0F7FA; border-radius: 8px;
+  }
+  .route-line .arrow { color: var(--text-muted); }
+
+  .info-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin-bottom: 8px; font-size: 13.5px;
+  }
+  .info-row .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    margin-top: 9px; flex-shrink: 0;
+  }
+  .dot-blue { background: var(--ocean); }
+  .dot-green { background: var(--green); }
+  .dot-yellow { background: var(--yellow); }
+  .dot-red { background: var(--accent); }
+  .info-row .label { color: var(--text-secondary); min-width: 52px; flex-shrink: 0; }
+  .info-row .content { color: var(--text); }
+
+  /* Cost Box */
+  .cost-box {
+    margin-top: 12px; padding: 12px 16px;
+    background: #FFFBF0; border: 1px dashed var(--yellow);
+    border-radius: 8px; font-size: 12.5px;
+  }
+  .cost-box .cost-title { font-weight: 700; color: #B7791F; margin-bottom: 6px; }
+  .cost-item { display: inline-block; margin-right: 16px; margin-bottom: 4px; color: var(--text-secondary); }
+
+  /* Note box */
+  .note-box {
+    margin-top: 10px; padding: 10px 14px;
+    background: #FFF5F5; border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0; font-size: 12.5px; color: #9E4A3B;
+  }
+
+  /* Budget Table */
+  .budget-table {
+    width: 100%; border-collapse: collapse;
+    background: var(--card-bg); border-radius: var(--radius);
+    overflow: hidden; border: 1px solid var(--border);
+    margin-bottom: 20px; font-size: 13px;
+  }
+  .budget-table th {
+    background: var(--ocean); color: white;
+    padding: 10px 14px; text-align: left; font-weight: 600;
+  }
+  .budget-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); }
+  .budget-table tr:last-child td { border-bottom: none; }
+  .budget-table tr:nth-child(even) { background: #FAFCFE; }
+  .budget-table .total-row { background: #F0F7FA !important; font-weight: 700; }
+  .budget-table .total-row td { border-top: 2px solid var(--ocean); }
+
+  /* Tags */
+  .tag {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    border-radius: 4px; margin-right: 4px; margin-bottom: 4px;
+  }
+  .tag-dive { background: #E8F8EE; color: #27AE60; }
+  .tag-food { background: #FFF8E1; color: #E67E22; }
+  .tag-hotel { background: #EDE7F6; color: #7E57C2; }
+  .tag-transit { background: #E3F2FD; color: #1976D2; }
+  .tag-activity { background: #FCE4EC; color: #C2185B; }
+  .tag-spa { background: #FDF2F8; color: #BE185D; }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px;
+    width: 2px; background: var(--ocean-light); border-radius: 1px;
+  }
+  .tl-item { position: relative; margin-bottom: 14px; }
+  .tl-item::before {
+    content: ''; position: absolute; left: -21px; top: 6px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--ocean); border: 2px solid white;
+  }
+  .tl-time { font-size: 11.5px; color: var(--ocean); font-weight: 600; }
+  .tl-content { font-size: 13.5px; color: var(--text); }
+
+  /* Footer */
+  .footer {
+    text-align: center; padding: 24px; color: var(--text-muted);
+    font-size: 12px; margin-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .hero { padding: 28px 18px; }
+    .hero h1 { font-size: 21px; }
+    .day-body { padding: 12px 14px; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Prep & Risk section */
+  .prep-section { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 26px; margin-bottom: 16px; }
+  .prep-block { margin-bottom: 22px; }
+  .prep-block:last-child { margin-bottom: 0; }
+  .prep-block h3 { font-size: 15px; color: var(--ocean); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+  .checklist { list-style: none; padding: 0; margin: 0; }
+  .checklist li { font-size: 13px; padding: 6px 0 6px 26px; position: relative; color: var(--text); border-bottom: 1px solid #F0F2F5; }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li::before { content: '✓'; position: absolute; left: 4px; top: 6px; color: var(--green); font-weight: 700; }
+  .callout { padding: 13px 16px; border-radius: 8px; font-size: 12.5px; line-height: 1.6; margin-top: 12px; }
+  .callout-danger { background: #FFF1F0; border-left: 3px solid var(--accent); color: #9E4A3B; }
+  .callout-warn { background: #FFFBF0; border-left: 3px solid var(--yellow); color: #8A6D1A; }
+  .callout-info { background: #F0F7FA; border-left: 3px solid var(--ocean-light); color: #2C5F7C; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+  .sub-card { background: #FAFCFE; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .sub-card h4 { font-size: 13px; color: var(--ocean); margin-bottom: 8px; }
+  .risk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .risk-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; background: #FAFCFE; }
+  .risk-card h4 { font-size: 13px; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; color: var(--text); }
+  .risk-card ul { list-style: none; padding: 0; margin: 0; }
+  .risk-card li { font-size: 12px; padding: 3px 0 3px 16px; position: relative; color: var(--text-secondary); }
+  .risk-card li::before { content: '•'; position: absolute; left: 2px; color: var(--text-muted); }
+  .emoji-badge { font-size: 15px; }
+  .final-box { background: linear-gradient(135deg, #FDF6E3, #FDEBD0); border: 1px solid var(--yellow); border-radius: var(--radius); padding: 18px 22px; }
+  .final-box h3 { color: #B7791F; }
+  table.contact-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+  table.contact-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  table.contact-table td:first-child { font-weight: 600; color: var(--ocean); white-space: nowrap; }
+
+  @media (max-width: 900px) {
+    .page-shell {
+      display: block;
+      max-width: 960px;
+    }
+    .toc-sidebar {
+      top: 8px;
+      z-index: 30;
+      max-height: none;
+      margin-bottom: 14px;
+      padding: 8px 10px;
+      box-shadow: 0 5px 18px rgba(41, 50, 65, 0.08);
+    }
+    .toc-heading { padding: 0; border-bottom: 0; }
+    .toc-toggle { display: inline-grid; place-items: center; }
+    .toc-nav {
+      display: none;
+      max-height: min(68vh, 540px);
+      overflow-y: auto;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .toc-sidebar.is-open .toc-nav { display: block; }
+    .toc-link { padding-top: 8px; padding-bottom: 8px; }
+    .map-marker-guide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    [id] { scroll-margin-top: 72px; }
+  }
+
+  @media (max-width: 600px) {
+    html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+    body { padding: 12px; }
+    .hero { padding: 26px 16px; }
+    .hero h1 { font-size: 21px; line-height: 1.4; }
+    .hero .subtitle { font-size: 13px; overflow-wrap: anywhere; }
+    .hero .meta { gap: 10px 16px; }
+    .hero .meta span { min-width: 0; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .summary-card { padding: 14px 16px; }
+    .prep-section { padding: 16px 14px; min-width: 0; }
+    .section-title { font-size: 17px; align-items: flex-start; }
+    .day-card { min-width: 0; }
+    .day-header { align-items: flex-start; flex-direction: column; gap: 6px; padding: 12px 14px; }
+    .day-header .day-num { line-height: 1.45; }
+    .day-header .day-badge { white-space: normal; }
+    .day-body { padding: 12px 14px; min-width: 0; }
+    .route-line { display: block; overflow-wrap: anywhere; }
+    .info-row { min-width: 0; }
+    .info-row .content { min-width: 0; overflow-wrap: anywhere; }
+    .cost-item { display: block; margin-right: 0; overflow-wrap: anywhere; }
+    div[style*="display:grid"] { grid-template-columns: minmax(0, 1fr) !important; }
+    img { max-width: 100%; height: auto; }
+    table { display: block; width: 100% !important; max-width: 100%; overflow-x: auto; }
+    table.contact-table td:first-child { white-space: normal; }
+    .route-map-card { padding: 12px; }
+    .map-toolbar { align-items: flex-start; flex-direction: column; }
+    .map-legend { justify-content: flex-start; gap: 7px 11px; }
+    #trip-map { height: 460px; }
+    .route-stage-list { grid-template-columns: 1fr; }
+    .route-stage { border-right: 1px solid var(--border); }
+    .map-marker-guide { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-shell">
+<aside class="toc-sidebar" aria-label="攻略目录">
+  <div class="toc-heading">
+    <span>攻略目录</span>
+    <button class="toc-toggle" type="button" aria-expanded="false" aria-controls="toc-nav" title="展开或收起目录">☰</button>
+  </div>
+  <nav class="toc-nav" id="toc-nav">
+    <a class="toc-link" href="#top">行程摘要</a>
+    <a class="toc-link" href="#route-map">全程路线图</a>
+    <a class="toc-link" href="#preparation">行前准备</a>
+    <a class="toc-link" href="#risks">风险预案</a>
+    <a class="toc-link" href="#overview">行程总览</a>
+    <div class="toc-group-label">每日行程</div>
+    <a class="toc-link toc-link-day" href="#day-1">D1 抵达宿务</a>
+    <a class="toc-link toc-link-day" href="#day-2">D2 前往墨宝</a>
+    <a class="toc-link toc-link-day" href="#day-3-5">D3–5 墨宝双轨</a>
+    <a class="toc-link toc-link-day" href="#day-6">D6 前往奥斯洛布</a>
+    <a class="toc-link toc-link-day" href="#day-7">D7 鲸鲨与瀑布</a>
+    <a class="toc-link toc-link-day" href="#day-8">D8 前往锡基霍尔</a>
+    <a class="toc-link toc-link-day" href="#day-9">D9 锡基霍尔环岛</a>
+    <a class="toc-link toc-link-day" href="#day-10">D10 潜水与在地探索</a>
+    <a class="toc-link toc-link-day" href="#day-11">D11 前往薄荷</a>
+    <a class="toc-link toc-link-day" href="#day-12">D12 薄荷陆地线</a>
+    <a class="toc-link toc-link-day" href="#day-13">D13 宿务城市观察</a>
+    <a class="toc-link toc-link-day" href="#day-14">D14 马尼拉中转返程</a>
+    <div class="toc-group-label">实用信息</div>
+    <a class="toc-link" href="#budget">费用预算</a>
+    <a class="toc-link" href="#final-check">72 小时核对</a>
+  </nav>
+</aside>
+
+<main class="page-content" id="top">
+
+<!-- Hero -->
+<div class="hero">
+  <h1>🏝️ 菲律宾宿务双轨旅行攻略</h1>
+  <div class="subtitle">深圳 → 香港 → 马尼拉 → 宿务 → 墨宝 → 奥斯洛布 → 锡基霍尔 → 薄荷 → 宿务 → 深圳</div>
+  <div class="meta">
+    <span>📅 2026/09/28 ~ 10/11</span>
+    <span>⏱️ 共 14 天 / 13 晚</span>
+    <span>🤿 潜水伙伴 + 🚶 在地探索</span>
+    <span>👥 2 人出行（两位男生）</span>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary-grid">
+  <div class="summary-card">
+    <div class="label">总天数</div>
+    <div class="value">14</div>
+    <div class="sub">09.28 - 10.11</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">目的地</div>
+    <div class="value">5</div>
+    <div class="sub">宿务·墨宝·奥斯洛布·锡基霍尔·薄荷</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">双轨同行</div>
+    <div class="value">5</div>
+    <div class="sub">共同早餐/午餐/日落固定汇合</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">预估人均</div>
+    <div class="value">~4.5K</div>
+    <div class="sub">基础预算，不含国际机票与机动金</div>
+  </div>
+</div>
+
+<!-- Interactive route map -->
+<h2 class="section-title" id="route-map"><span class="icon">🧭</span> 全程地理路线图</h2>
+<section class="route-map-card" aria-labelledby="route-map">
+  <p class="route-map-intro">
+    地图同时展示跨境航线、岛内陆路与跨岛渡轮。圆形数字是住宿/转场节点；切换到“宿务群岛”后会展开彩色景点标记，点击可查看对应日期、时段和执行条件。
+  </p>
+  <div class="map-toolbar">
+    <div class="map-view-switch" role="group" aria-label="地图视角">
+      <button class="map-view-button active" type="button" data-map-view="all" aria-pressed="true">全程</button>
+      <button class="map-view-button" type="button" data-map-view="visayas" aria-pressed="false">宿务群岛</button>
+    </div>
+    <div class="map-legend" aria-label="路线图例">
+      <span class="map-legend-item"><span class="map-line-swatch map-line-flight"></span>航班</span>
+      <span class="map-legend-item"><span class="map-line-swatch map-line-land"></span>陆路</span>
+      <span class="map-legend-item"><span class="map-line-swatch map-line-ferry"></span>渡轮</span>
+      <span class="map-legend-item"><span class="poi-marker poi-dive" style="width:18px;height:18px;font-size:8px;box-shadow:none;">潜</span>潜水/水上</span>
+      <span class="map-legend-item"><span class="poi-marker poi-sight" style="width:18px;height:18px;font-size:8px;box-shadow:none;">景</span>景点</span>
+      <span class="map-legend-item"><span class="poi-marker poi-local" style="width:18px;height:18px;font-size:8px;box-shadow:none;">访</span>文化商业</span>
+      <span class="map-legend-item"><span class="poi-marker poi-rest" style="width:18px;height:18px;font-size:8px;box-shadow:none;">休</span>休闲/汇合</span>
+    </div>
+  </div>
+  <div id="trip-map" aria-label="菲律宾宿务十四天旅行路线交互地图">
+    <div class="map-loading">正在加载本地地理底图；路线、Day 标签与景点标记均可离线查看。</div>
+  </div>
+  <p class="map-hint">操作：拖动查看区域，使用地图 +/- 或双指缩放，点击数字节点和景点圆点查看时间。景点坐标用于路线定位，现场入口以地图导航和运营方通知为准。</p>
+  <div class="map-offline-note">底图使用本地简化地理数据，不依赖在线瓦片；适合理解跨岛路线，不替代街道级导航。</div>
+
+  <div class="map-marker-guide" aria-label="地图标记解释">
+    <div class="map-marker-guide-item"><strong><span class="map-key-symbol map-key-route">5</span>数字节点</strong>住宿或主要转场城市。旁边的 D2–5 表示停留天数，点击可看抵达与离开说明。</div>
+    <div class="map-marker-guide-item"><strong><span class="map-key-symbol poi-dive">潜</span>D3 潜</strong>潜水、浮潜或鲸鲨等水上项目。你不下水时看同一天橙色“不潜水”说明。</div>
+    <div class="map-marker-guide-item"><strong><span class="map-key-symbol poi-sight">景</span>D9 景</strong>瀑布、山峰、保护区和历史景点，标记右侧会直接显示对应 Day。</div>
+    <div class="map-marker-guide-item"><strong><span class="map-key-symbol poi-local">访</span>D13 访</strong>市场、小店、老城、IT Park 等文化或商业观察点，交流前先征得同意。</div>
+    <div class="map-marker-guide-item"><strong><span class="map-key-symbol poi-rest">休</span>D11 休</strong>海滩、SPA、日落和共同汇合点，用来给连续转场与潜水留恢复时间。</div>
+  </div>
+
+  <div class="nondiver-map-summary">
+    <h3>不潜水者怎么走这张地图</h3>
+    <p><strong>D2</strong> 以抵达、海岸踩点和潜店确认安排为主；<strong>D3</strong> 可由向导陪同看沙丁鱼，也可完全不下水，改走 Panagsama 小店与 White Beach；<strong>D4</strong> 在 Kawasan 认证向导线和 Moalboal 镇区观察线中二选一；<strong>D5</strong> 你与可能不潜水的小伙伴可共同逛市场、吃本地餐、整理观察和准备转场；<strong>D7</strong> 鲸鲨可留在船上观察；<strong>D10</strong> 伙伴潜水时，你走 San Juan 生活区、咖啡访谈和 SPA。所有涉水活动都不单独进行。</p>
+  </div>
+
+  <h3 class="map-daily-title" id="map-daily-plan">Day 1–14 每日路线与时间安排</h3>
+  <p class="map-daily-subtitle">每一天都按实际执行顺序展开；橙色说明是不潜水替代路线，绿色说明是两人可以共同进行的安排。</p>
+  <div class="route-stage-list" aria-label="Day 1 到 Day 14 每日路线与时间安排">
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D1 · 9月28日</div><div class="route-stage-kind">转机日</div></div>
+      <div class="route-stage-place">深圳 → 香港 → 马尼拉 → 宿务</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">05:30–08:00</span>深圳出发，经口岸前往香港机场。</p>
+        <p><span class="route-stage-time">09:25–11:50</span>HKG → MNL；抵达后办入境、取行李和海关。</p>
+        <p><span class="route-stage-time">11:50–16:30</span>马尼拉转机并飞往宿务，国内段抵达后取行李。</p>
+        <p><span class="route-stage-time">18:05–20:00</span>宿务市区入住、晚餐，早休息。</p>
+      </div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D2 · 9月29日</div><div class="route-stage-kind">陆路转场</div></div>
+      <div class="route-stage-place">宿务 → 墨宝 Moalboal</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">06:30–08:00</span>早餐、退房，到 South Bus Terminal 上车。</p>
+        <p><span class="route-stage-time">08:00–12:35</span>Ceres 巴士到 Moalboal，转 tricycle 去 Panagsama。</p>
+        <p><span class="route-stage-time">13:00–15:30</span>午餐、入住、确认 D3–5 潜水与非潜水安排。</p>
+        <p><span class="route-stage-time">15:30–18:00</span>海岸踩点；不下水就逛海边小店、看日落。</p>
+      </div>
+      <div class="route-stage-nondiver"><strong>不潜水：</strong>D2 不必强行浮潜，把它当作适应环境和确认后续安排的半天。</div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D3 · 9月30日</div><div class="route-stage-kind">墨宝双轨</div></div>
+      <div class="route-stage-place">Panagsama + Pescador + White Beach</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">07:00–12:00</span>一起早餐；伙伴 08:30/10:30 两潜。</p>
+        <p><span class="route-stage-time">08:30–11:30</span>你可跟向导看沙丁鱼；完全不下水则走海岸、小店和咖啡。</p>
+        <p><span class="route-stage-time">13:30–17:00</span>你去 White Beach 散步并观察海滩服务。</p>
+        <p><span class="route-stage-time">17:30</span>回 Panagsama 汇合，看日落、吃晚饭。</p>
+      </div>
+      <div class="route-stage-nondiver"><strong>不潜水：</strong>沙丁鱼只是可选项目，不参与也不影响当天完整度。</div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D4 · 10月1日</div><div class="route-stage-kind">二选一</div></div>
+      <div class="route-stage-place">Pescador / Kawasan / Moalboal 镇区</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">08:30–12:00</span>伙伴两潜：Pescador + Sardine Run。</p>
+        <p><span class="route-stage-time">A 06:30–13:00</span>你跟认证向导去 Kawasan 峡谷。</p>
+        <p><span class="route-stage-time">B 09:00–13:30</span>或逛 Poblacion 市场、小店并吃本地午餐。</p>
+        <p><span class="route-stage-time">17:00</span>两人回 Panagsama 汇合，不再叠加远途景点。</p>
+      </div>
+      <div class="route-stage-nondiver"><strong>不潜水：</strong>怕水或不想高强度就选 B 线；它更符合商业与文化观察目标。</div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D5 · 10月2日</div><div class="route-stage-kind">伙伴潜水待确认</div></div>
+      <div class="route-stage-place">Moalboal 收尾 + 两人共同陆地线</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">08:00–09:30</span>自然醒、早餐；最晚此时确认伙伴今天是否潜水。</p>
+        <p><span class="route-stage-time">09:30–11:30</span>若两人都不潜水，一起逛 Poblacion 市场、面包店和小店。</p>
+        <p><span class="route-stage-time">11:30–13:00</span>一起吃本地午餐，交换前几天观察。</p>
+        <p><span class="route-stage-time">13:30–17:00</span>洗衣、打包、确认 D6 车辆；傍晚海岸散步。</p>
+      </div>
+      <div class="route-stage-shared"><strong>特别备注：</strong>小伙伴 Day 5 可能不潜水。默认预留“两人共同陆地线”；若最终参加 Dive 5/6，你再单独执行市场线，午餐或傍晚汇合。</div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D6 · 10月3日</div><div class="route-stage-kind">陆路转场</div></div>
+      <div class="route-stage-place">墨宝 → 奥斯洛布 Oslob</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">08:00–11:30</span>早餐退房，巴士/包车南下，到 Tan-awan 入住。</p>
+        <p><span class="route-stage-time">11:30–13:00</span>本地食堂午餐、短休。</p>
+        <p><span class="route-stage-time">13:30–16:30</span>Tumalog Falls；若关闭则改镇区、海岸与鲸鲨点踩线。</p>
+        <p><span class="route-stage-time">17:00–20:00</span>海边散步，确认 D7 登记点，晚餐早睡。</p>
+      </div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D7 · 10月4日</div><div class="route-stage-kind">鲸鲨观察</div></div>
+      <div class="route-stage-place">Tan-awan + Tumalog + Sumilon 可选</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">05:30–07:30</span>起床、登记与简报；06:40 鲸鲨浮潜或船上观察。</p>
+        <p><span class="route-stage-time">07:30–11:30</span>早餐补觉；若 D6 未去，再安排 Tumalog。</p>
+        <p><span class="route-stage-time">14:00–17:30</span>Sumilon 仅在海况和体力允许时参加，否则民宿休息。</p>
+        <p><span class="route-stage-time">18:30</span>晚餐，确认 D8 两段船票与接驳。</p>
+      </div>
+      <div class="route-stage-nondiver"><strong>不潜水：</strong>鲸鲨项目可以只坐船观察；不想参加则睡晚一点，在海边和镇区活动。</div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D8 · 10月5日</div><div class="route-stage-kind">双船转场</div></div>
+      <div class="route-stage-place">奥斯洛布 → 杜马盖地 → 锡基霍尔</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">07:00–09:30</span>退房到 Liloan Port（Santander），乘当日确认船到 Sibulan Port。</p>
+        <p><span class="route-stage-time">09:30–12:30</span>转到 Dumaguete 港，再乘已出票班次去 Siquijor Port，下船后转 San Juan。</p>
+        <p><span class="route-stage-time">12:30–14:00</span>接送去 San Juan，入住、午餐。</p>
+        <p><span class="route-stage-time">15:00–19:00</span>只选 Balete 或附近海岸；17:30 Paliton 日落。</p>
+      </div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D9 · 10月6日</div><div class="route-stage-kind">两人共同环岛</div></div>
+      <div class="route-stage-place">Balete + Cambugahay + Salagdoong + Paliton</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">08:30–10:00</span>Balete Tree 与 Cambugahay Falls。</p>
+        <p><span class="route-stage-time">10:00–13:30</span>Salagdoong 海滩、午餐和休息。</p>
+        <p><span class="route-stage-time">13:30–17:00</span>Lugnason/Kagusuan 二选一；文化交流仅提前引荐时进行。</p>
+        <p><span class="route-stage-time">17:00–18:30</span>Paliton 日落，晚上整理观察笔记。</p>
+      </div>
+      <div class="route-stage-shared"><strong>共同日：</strong>当天没有潜水安排，两个人可以一起走环岛线。</div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D10 · 10月7日</div><div class="route-stage-kind">锡基霍尔双轨</div></div>
+      <div class="route-stage-place">Tubod 潜水 + San Juan 在地探索</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">08:00–11:30</span>伙伴两潜；你跟司机走生活区、市场和小店。</p>
+        <p><span class="route-stage-time">11:30–13:30</span>你整理观察，两人在潜店附近汇合午餐。</p>
+        <p><span class="route-stage-time">14:00–16:30</span>伙伴第 3 潜；你做 Hilot/精油按摩或海边休息。</p>
+        <p><span class="route-stage-time">17:00–21:00</span>一起看日落、吃告别晚餐、准备 D11 船班。</p>
+      </div>
+      <div class="route-stage-nondiver"><strong>不潜水重点：</strong>只访谈 1–2 位当地人，主题聚焦岛上补货、旺淡季和平台获客。</div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D11 · 10月8日</div><div class="route-stage-kind">跨岛 + 慢游</div></div>
+      <div class="route-stage-place">锡基霍尔 → 薄荷 Bohol</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">07:00–10:30</span>早餐退房，乘渡轮到 Tagbilaran。</p>
+        <p><span class="route-stage-time">10:30–13:00</span>去 Panglao 入住、海鲜午餐和午休。</p>
+        <p><span class="route-stage-time">14:00–18:30</span>Alona Beach、潜店价格观察、日落；SPA 可选。</p>
+        <p><span class="route-stage-time">19:00–21:00</span>Alona 夜市与海鲜晚餐。</p>
+      </div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D12 · 10月9日</div><div class="route-stage-kind">商业观察 + 回宿务</div></div>
+      <div class="route-stage-place">Corella 眼镜猴 → Dauis Bee Farm → Tagbilaran 港 → 宿务</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">08:30–10:00</span>眼镜猴保护区，按开放时间入场并观察保育与票务。</p>
+        <p><span class="route-stage-time">10:00–13:30</span>转到 Dauis，Bee Farm 午餐并观察农旅、餐饮和零售导流。</p>
+        <p><span class="route-stage-time">13:30–返程前</span>回 Tagbilaran 港；Baclayon 或血盟碑仅在船票时间允许时短停。</p>
+        <p><span class="route-stage-time">按已出票班次</span>Tagbilaran → Cebu Pier 1，抵达后入住宿务市区酒店。</p>
+      </div>
+      <div class="route-stage-shared"><strong>巧克力山备选：</strong>需要取消 Bee Farm 或近港短停，并按已出票返程船倒排；不与主线同时承诺。</div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D13 · 10月10日</div><div class="route-stage-kind">城市文化商业</div></div>
+      <div class="route-stage-place">Carbon + Colon + 商场 + IT Park</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">08:00–10:00</span>Carbon Market 与 Taboan，观察传统零售。</p>
+        <p><span class="route-stage-time">10:00–12:00</span>Colon、遗产纪念碑与老城教堂区。</p>
+        <p><span class="route-stage-time">13:30–17:15</span>Ayala/SM 二选一，再到 IT Park；有预约才交流。</p>
+        <p><span class="route-stage-time">18:00–21:00</span>Sugbo Mercado 晚餐，回酒店打包早睡。</p>
+      </div>
+    </div>
+    <div class="route-stage">
+      <div class="route-stage-head"><div class="route-stage-day">D14 · 10月11日</div><div class="route-stage-kind">返程日</div></div>
+      <div class="route-stage-place">宿务 → 马尼拉 → 香港 → 深圳</div>
+      <div class="route-stage-detail">
+        <p><span class="route-stage-time">04:30–08:35</span>退房去机场，06:55 飞马尼拉。</p>
+        <p><span class="route-stage-time">09:15–13:00</span>准点且行李直挂时，Intramuros 或 BGC 二选一。</p>
+        <p><span class="route-stage-time">13:00–17:50</span>返回 T3，办理国际出境、安检和候机。</p>
+        <p><span class="route-stage-time">17:50–夜间</span>飞香港，抵达后返回深圳。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Dual-track travel principles -->
+<div class="prep-section" style="margin-top:18px;">
+  <div class="prep-block">
+    <h3><span class="emoji-badge">🧭</span> 这趟旅行的双轨规则</h3>
+    <div class="two-col">
+      <div class="sub-card">
+        <h4>🤿 小伙伴：潜水主线</h4>
+        <ul>
+          <li>墨宝 D3–4 安排 4 潜，D5 两潜待确认；锡基霍尔 3 潜，均按证书等级与当天海况调整</li>
+          <li>潜水日上午分开行动，潜后保留休息，不临时追加高强度项目</li>
+          <li>每天至少保留一次共同用餐和一次日落/散步时间</li>
+        </ul>
+      </div>
+      <div class="sub-card">
+        <h4>🚶 你：在地体验与商业文化观察</h4>
+        <ul>
+          <li>每地只研究一个主题、最多聊 2 位当地人，避免把旅行变成赶场调研</li>
+          <li>先消费再交流；先问是否方便聊 10 分钟，未经同意不录音、不拍人脸</li>
+          <li>任何浮潜或涉水活动都不单独进行；找向导/同伴，水性一般就穿救生衣</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout callout-info" style="margin-top:12px;">
+      <strong>每日固定汇合：</strong>出发前一起吃早餐并确认联系方式；中午能碰面就一起吃饭，不能则报平安；17:30 左右汇合看日落/吃晚饭。海况、船班或一方身体状态变化时，当天计划自动降级，不硬赶景点。
+    </div>
+  </div>
+</div>
+
+<!-- ===== 行前准备与风险预案 ===== -->
+<h2 class="section-title" id="preparation"><span class="icon">🎒</span> 行前准备与风险预案（首次赴菲必读）</h2>
+
+<div class="prep-section">
+
+  <!-- A. 入境与证件 -->
+  <div class="prep-block">
+    <h3><span class="emoji-badge">🛂</span> A. 入境与证件（最优先）</h3>
+
+    <div class="callout callout-info">
+      <strong>免签新政（2026/01/16 生效，试点 1 年，覆盖你的行程 ✓）：</strong><br>
+      持中国普通护照可<strong>免签停留 14 天</strong>（旅游/商务），<strong>仅限马尼拉(NAIA)和宿务(MCIA)两个口岸入境</strong>，<strong>不可延期、不可转其他签证</strong>。你的路线 HKG→MNL（先清关）→CEB 国内段，在马尼拉 NAIA 先过移民关，符合指定口岸要求 ✓。
+    </div>
+
+    <div class="callout callout-danger" style="margin-top:10px;">
+      <strong>⚠️ 临界提醒：</strong>你 9/28 入境、10/11 搭乘国际航班离境，按日历日计算正好使用满<strong>14 天免签额度</strong>。真正的离境节点是马尼拉办理国际出境手续，<strong>CEB→MNL 国内航班不等于已经离境</strong>。本行程没有签证余量：不要把返程改到 10/12；如希望抵御航班取消等极端情况，应提前向菲律宾驻华使领馆确认适用的 9(a) 签证方案。
+    </div>
+
+    <p style="font-size:13px;margin:14px 0 8px;color:var(--text-secondary);"><strong>入境必备材料清单（缺一可能被盘查/拒入境）：</strong></p>
+    <ul class="checklist">
+      <li>护照有效期 <strong>≥ 6 个月</strong>（从抵达日算）+ 至少 1 页空白签证页</li>
+      <li><strong>eTravel 注册已完成</strong>（<a href="https://etravel.gov.ph" target="_blank" rel="noopener" style="color:#185FA5;font-weight:600;text-decoration:underline;">etravel.gov.ph ↗</a>），生成二维码，建议出发前 72 小时内填好</li>
+      <li>往返机票行程单（手机存 + 打印），证明 14 天内离境</li>
+      <li>全程酒店订单（至少前几晚，手机存 + 打印）</li>
+      <li>资金证明（信用卡 + 适量美元现金，移民官可能抽查）</li>
+      <li>OW / AOW 潜水证书电子版（潜水日使用）</li>
+      <li>护照首页复印件 / 手机存电子版，与原件分开放</li>
+    </ul>
+
+    <div class="two-col" style="margin-top:14px;">
+      <div class="sub-card">
+        <h4>📋 入境流程</h4>
+        <div class="timeline" style="margin-top:6px;">
+          <div class="tl-item"><div class="tl-time">行前</div><div class="tl-content">线上填好 eTravel，保存二维码</div></div>
+          <div class="tl-item"><div class="tl-time">抵达马尼拉</div><div class="tl-content">走 <strong>Foreign Passport</strong> 通道 → 出示护照 + eTravel QR + 机票 + 酒店订单</div></div>
+          <div class="tl-item"><div class="tl-time">问询</div><div class="tl-content">移民官可能用英文问目的/住哪/几天 → <strong>如实简短回答</strong></div></div>
+          <div class="tl-item"><div class="tl-time">取行李</div><div class="tl-content">海关绿通道（无申报）→ 国内转机 CEB；若直飞宿务则在 MCIA 清关</div></div>
+        </div>
+      </div>
+      <div class="sub-card">
+        <h4>🚫 海关 / 移民官注意</h4>
+        <ul class="checklist" style="border:none;">
+          <li>菲政府<strong>禁止口岸官员索要小费</strong>：遇索贿明确拒绝、保留证据，向菲海关/移民部门举报并联系中国使领馆</li>
+          <li>曾有拒入境 / 不良记录者，赴菲前须先向菲移民局申请资格再审查</li>
+          <li>行程须与“旅游”目的一致，带好订单证明，避免被疑打工/转第三国</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>常见被拒 / 盘查原因：</strong>① 护照有效期不足 6 个月；② 无返程机票或酒店订单；③ <strong>eTravel 信息填错</strong>（护照号、地址不符）→ 可被直接拒入境；④ 资金/行程说不清。
+    </div>
+  </div>
+
+  <!-- B. 资金 / 通讯 -->
+  <div class="prep-block">
+    <h3><span class="emoji-badge">💳</span> B. 资金、支付与通讯</h3>
+    <div class="two-col">
+      <div class="sub-card">
+        <h4>💰 资金与支付</h4>
+        <ul class="checklist" style="border:none;">
+          <li>国内先换少量美元，到当地换比索（机场汇率差，市区/商场更好）；或用 ATM 取现（带银联/Visa）</li>
+          <li>小店、市场、三轮车<strong>只收现金</strong>；商场/酒店可刷卡</li>
+          <li>Grab 可绑信用卡或现金支付</li>
+          <li>不随身带大量现金，分散存放（一人带一部分）</li>
+        </ul>
+      </div>
+      <div class="sub-card">
+        <h4>📱 通讯与必备 APP</h4>
+        <ul class="checklist" style="border:none;">
+          <li>已购电话卡（127.5 RMB）→ 落地插卡激活，确认流量/通话</li>
+          <li>备选 eSIM（Airalo 等）</li>
+          <li>装好：<strong>Grab</strong>（打车）、<strong>Google Maps</strong>（下离线地图）、Maps.me（离线）、翻译 APP</li>
+          <li>两人各自手机都存一份全部订单 + 证件照片</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- C. 健康 / 行李 -->
+  <div class="prep-block">
+    <h3><span class="emoji-badge">🧳</span> C. 健康、疫苗与行李</h3>
+    <div class="two-col">
+      <div class="sub-card">
+        <h4>🩺 健康与保险</h4>
+        <ul class="checklist" style="border:none;">
+          <li>无强制疫苗（黄热仅限来自疫区）；常备：腹泻药、<strong>晕船药</strong>（渡轮多！）、感冒药、创可贴</li>
+          <li>防晒 SPF50+（reef-safe 近珊瑚）、驱蚊 DEET（登革热全年有）</li>
+          <li>饮水只喝瓶装，勿直饮自来水/冰块</li>
+          <li><strong>潜水保险必买</strong>（DAN 或含潜水责任的旅行险）——岛上医疗条件差，重伤需撤至宿务/马尼拉</li>
+        </ul>
+      </div>
+      <div class="sub-card">
+        <h4>🎒 行李清单</h4>
+        <ul class="checklist" style="border:none;">
+          <li>证件：护照、电子/复印件、机票酒店打印、潜水证</li>
+          <li>数码：<strong>美标两扁脚转换头(A/B型)</strong>、充电宝、防水手机袋</li>
+          <li>潜水：面镜/呼吸管/潜水电脑（自带更省）、毛巾、晾衣绳</li>
+          <li>衣物：速干衣、泳裤、防晒衣(rash guard)、拖鞋、<strong>轻便雨衣</strong>（台风季！）</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout callout-warn">
+      ⚠️ <strong>自驾摩托证件：</strong>菲律宾 LTO 允许短期游客在入境后 90 天内使用有效外国驾照，但驾照必须覆盖摩托车型；非英文驾照还应准备官方英文翻译。中国大陆驾照并非天然等同“国际驾照”。本行程默认优先使用酒店司机、包车或带司机的 habal-habal；只有证件、车型权限、头盔和租车保险都确认后才自驾。
+    </div>
+    <div class="callout callout-info">
+      🔌 <strong>插头与电压（必看）：</strong>菲律宾为 <strong>220V / 60Hz</strong>，与中国电压相同 → <strong>无需电压转换器</strong>。但插座主要是<strong>美标 Type A/B（两扁脚，类美式）</strong>；中国插头有 Type A（两扁脚，手机/笔记本充电器大多为此类，可直接插）、Type I（三扁斜脚/澳式）、Type C（两圆脚）。<br>
+      ✅ <strong>买什么：</strong>备一个<strong>万能转换插头（含 Type A/B 美标 + USB/Type-C 快充）</strong>最省心；若充电器本就是 Type A 两扁脚则可直插、不强制买。避开纯电机类小电器（电吹风/剃须刀），因 50/60Hz 频率差异可能转速异常——选标"100-240V 50/60Hz"的电器更稳。<br>
+      📱 <strong>小红书搜真实产品图：</strong>用「菲律宾转换插头」「出国万能转换插头」「美标转换插头推荐」「旅行转换插头测评」等词搜索，看实拍与避坑笔记。
+    </div>
+  </div>
+
+  <!-- D. 两人同行 -->
+  <div class="prep-block">
+    <h3><span class="emoji-badge">👬</span> D. 两位男生同行特别提示</h3>
+    <ul class="checklist">
+      <li><strong>分工 + 双备份：</strong>一人主理证件/eTravel/订单，一人主理现金/支付，但双方手机都备份全套电子版</li>
+      <li><strong>互相拍照存证：</strong>护照、签证、酒店、渡轮票，云端 + 各自手机各留一份</li>
+      <li><strong>不要同时“掉线”：</strong>一人在水下/船上活动时，另一人留在岸上保管证件与财物</li>
+      <li><strong>夜间避险：</strong>避免偏僻路段独行；保守地区注意举止，公共场合避免过度亲昵以免引来不必要的注意</li>
+      <li><strong>遇拦路/索贿：</strong>保持礼貌但坚定，不贿赂，记下车牌/制服编号，事后报警或联系领馆</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ===== 风险预案 ===== -->
+<h2 class="section-title" id="risks"><span class="icon">⚠️</span> 风险预案</h2>
+
+<div class="prep-section">
+  <div class="risk-grid">
+    <div class="risk-card">
+      <h4>🌪️ 自然灾害（台风）</h4>
+      <ul>
+        <li>你 9/28–10/11 撞上<strong>台风季尾巴（6–11月，8–10月最强）</strong></li>
+        <li>你有 3 段跨岛渡轮，恶劣海况可能停航；务必保留 D12 当晚回宿务、D13 留在宿务的缓冲结构，不把返宿务推迟到 D13</li>
+        <li>买含<strong>天气取消/行程变更</strong>的旅行险；9/18 起关注趋势，出发前 72 小时和每次乘船前查 PAGASA 与船司公告</li>
+        <li>绝不强行出海/上岛</li>
+      </ul>
+    </div>
+    <div class="risk-card">
+      <h4>👜 治安 / 扒窃</h4>
+      <ul>
+        <li>人多处防盗：市场、巴士、码头、jeepney</li>
+        <li>手机不外露，用斜挎包/前袋</li>
+        <li>酒店保险箱存护照与现金</li>
+        <li>摩托车抢手机常见，走路别贴马路举手机</li>
+      </ul>
+    </div>
+    <div class="risk-card">
+      <h4>🕵️ 诈骗防范</h4>
+      <ul>
+        <li>出租车拒打表 → 用 <strong>Grab</strong></li>
+        <li>三轮车/岛交先议价（问酒店正常价）</li>
+        <li>假预订/假导游 → 走正规平台</li>
+        <li>ATM 在银行/商场内、遮按键防侧录</li>
+      </ul>
+    </div>
+    <div class="risk-card">
+      <h4>🚗 交通安全</h4>
+      <ul>
+        <li>摩托戴头盔、慢行，山路弯多</li>
+        <li>渡轮选 <strong>Oceanjet</strong> 等正规、查救生衣</li>
+        <li>夜路不骑摩托</li>
+        <li>两人别同乘一辆无牌车</li>
+      </ul>
+    </div>
+    <div class="risk-card">
+      <h4>🤿 涉水 / 潜水</h4>
+      <ul>
+        <li>仅用 <strong>PADI/SSI 认证</strong>潜店</li>
+        <li>不超证，买潜保，不单独潜水</li>
+        <li>浮潜穿救生衣</li>
+        <li>鲸鲨互动<strong>禁涂防晒霜</strong></li>
+      </ul>
+    </div>
+    <div class="risk-card">
+      <h4>🏥 健康医疗</h4>
+      <ul>
+        <li>岛医条件基本，重伤靠撤离</li>
+        <li>带常用药，防登革/狂犬病（勿逗野狗）</li>
+        <li>饮水只喝瓶装</li>
+        <li>买含医疗撤离的保险</li>
+      </ul>
+    </div>
+    <div class="risk-card">
+      <h4>⚖️ 法律禁忌</h4>
+      <ul>
+        <li><strong>严禁毒品</strong>（重罚）</li>
+        <li>远离黄、赌</li>
+        <li>不替陌生人带物/寄递</li>
+        <li>政治敏感话题少谈</li>
+      </ul>
+    </div>
+    <div class="risk-card">
+      <h4>🗺️ 区域安全</h4>
+      <ul>
+        <li>你去的<strong>宿务/薄荷/锡基霍尔</strong>属中部Visayas，旅游区较安全 ✓</li>
+        <li>避开：西棉兰老、苏禄群岛、马拉维（不在你路线）</li>
+        <li>遇突发，按下方紧急联络求助</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout callout-danger" style="margin-top:16px;">
+    <strong>📞 紧急联络（建议两人手机都存）：</strong>
+    <table class="contact-table">
+      <tr><td>菲律宾报警急救</td><td>911</td></tr>
+      <tr><td>红十字会急救</td><td>143</td></tr>
+      <tr><td>中国驻菲使馆（马尼拉）</td><td>0063-2-82311033</td></tr>
+      <tr><td>中国驻宿务总领馆</td><td>0063-32-3430008</td></tr>
+      <tr><td>外交部全球领保（24h）</td><td>0086-10-12308 / 0086-10-65612308</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 行程概览 ===== -->
+<h2 class="section-title" id="overview"><span class="icon">🗺️</span> 行程总览</h2>
+
+<table class="budget-table">
+  <tr><th style="width:60px">日期</th><th>目的地</th><th style="width:100px">主题</th><th style="width:90px">住宿</th></tr>
+  <tr><td>D1 9/28</td><td>深圳→香港→马尼拉→宿务市区</td><td><span class="tag tag-transit">交通日</span></td><td>宿务市区·近南巴士站</td></tr>
+  <tr><td>D2 9/29</td><td>宿务 → 墨宝 Moalboal</td><td><span class="tag tag-transit">移动+适应</span></td><td>Moalboal (3晚)</td></tr>
+  <tr><td>D3 9/30</td><td>墨宝 Moalboal</td><td><span class="tag tag-dive">潜水日</span></td><td>Neptune Diving Resort</td></tr>
+  <tr><td>D4 10/01</td><td>墨宝 Moalboal</td><td><span class="tag tag-dive">潜水日</span></td><td>Neptune Diving Resort</td></tr>
+  <tr><td>D5 10/02</td><td>墨宝 Moalboal</td><td><span class="tag tag-activity">共同陆地 / 潜水待定</span></td><td>Neptune Diving Resort</td></tr>
+  <tr><td>D6 10/03</td><td>墨宝 → 奥斯洛布 Oslob</td><td><span class="tag tag-activity">观鲸鲨+瀑布</span></td><td>Oslob (1晚)</td></tr>
+  <tr><td>D7 10/04</td><td>奥斯洛布 Oslob</td><td><span class="tag tag-activity">鲸鲨+Tumalog Falls</span></td><td>Oslob (或直接离岛)</td></tr>
+  <tr><td>D8 10/05</td><td>Oslob → 锡基霍尔 Siquijor</td><td><span class="tag tag-transit">渡轮+环岛</span></td><td>Siquijor (3晚)</td></tr>
+  <tr><td>D9 10/06</td><td>锡基霍尔 Siquijor</td><td><span class="tag tag-activity">环岛游</span></td><td>Siquijor</td></tr>
+  <tr><td>D10 10/07</td><td>锡基霍尔 Siquijor</td><td><span class="tag tag-dive">潜水日 3潜</span> / <span class="tag tag-spa">你做SPA</span></td><td>Siquijor</td></tr>
+  <tr><td>D11 10/08</td><td>锡基霍尔 → 薄荷 Bohol</td><td><span class="tag tag-transit">渡轮</span></td><td>Panglao·住 1 晚</td></tr>
+  <tr><td>D12 10/09</td><td>薄荷 Bohol → 宿务 Cebu</td><td><span class="tag tag-sight">商业观察+返程</span></td><td>宿务市区酒店</td></tr>
+  <tr><td>D13 10/10</td><td>宿务 Cebu</td><td><span class="tag tag-sight">宿务市区</span></td><td>Cebu 市区酒店</td></tr>
+  <tr><td>D14 10/11</td><td>宿务→马尼拉(中转9h)→香港</td><td><span class="tag tag-transit">返程+马尼拉半日游</span></td><td>--</td></tr>
+</table>
+
+<!-- ===== 每日详情 ===== -->
+<h2 class="section-title" id="daily-itinerary"><span class="icon">📋</span> 每日详细行程</h2>
+
+<!-- Day 1 -->
+<div class="day-card" id="day-1">
+  <div class="day-header">
+    <div class="day-num">Day 1 &nbsp;|&nbsp; 9月28日（周一）</div>
+    <div class="day-badge badge-travel">出发日 · 去程航班已确认 ✓</div>
+  </div>
+  <div class="day-body">
+    <div class="route-line">
+      深圳 <span class="arrow">→</span> 香港 HKG <span class="arrow">→</span> 马尼拉 MNL <span class="arrow">→</span> 宿务 CEB
+    </div>
+
+    <!-- Flight details card -->
+    <div style="background:#F0F7FA;border:1px solid var(--ocean-light);border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <p style="font-size:13px;font-weight:700;color:var(--ocean);margin-bottom:10px;">✈️ 去程航班详情（宿务航空 Cebu Pacific Air）</p>
+      <table style="width:100%;font-size:12.5px;border-collapse:collapse;">
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>09:25</strong></td><td style="border-bottom:1px solid #E0E4E8;">香港 T2 <strong>HKG</strong></td><td style="border-bottom:1px solid #E0E4E8;">🛫 <strong>5J273</strong> 宿务航空 | 经济舱 | 无餐 | 2h25m</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;background:#FFFBF0;"><strong>11:50</strong></td><td style="background:#FFFBF0;border-bottom:1px solid #E0E4E8;">马尼拉 T3 <strong>MNL</strong></td><td style="background:#FFFBF0;border-bottom:1px solid #E0E4E8;">⏳ 中转 <strong>3h10m</strong> — <em>需重新托运行李！</em></td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>15:00</strong></td><td style="border-bottom:1px solid #E0E4E8;">马尼拉 T3 <strong>MNL</strong></td><td style="border-bottom:1px solid #E0E4E8;">🛫 <strong>5J581</strong> 宿务航空 | 空客321中 | 经济舱 | 无餐 | 1h30m</td></tr>
+        <tr><td style="padding:5px 8px;"><strong>16:30</strong></td><td>宿务 T1 <strong>CEB</strong></td><td>🏁 国内段抵达麦克坦-宿务国际机场（已在马尼拉完成入境）</td></tr>
+      </table>
+    </div>
+
+    <!-- ===== 住宿推荐（衔接 D2 去墨宝）===== -->
+    <div style="background:#FFF8F0;border:1px solid #F0D9B5;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
+      <p style="font-size:13.5px;font-weight:800;color:#B26A00;margin-bottom:4px;">🏨 住宿怎么选（直接决定 D2 去墨宝顺不顺）</p>
+      <p style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.6;">
+        <strong>核心逻辑：</strong>D2 一早要从 <strong>Cebu South Bus Terminal（南巴士站）</strong> 坐 Ceres 巴士去墨宝（约 4h）。所以 <strong>Day 1 住宿务市区、紧挨南巴士站最省心</strong>——D2 打车 10-15min 直达，不用过桥进城。若住 Mactan 机场岛，D2 要过桥 45-60min，得 05:30 起床，缓冲差，<strong>不推荐</strong>。
+      </p>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;">
+        <tr style="background:#FBE9CC;font-weight:700;color:#7a4a00;">
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">推荐</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">酒店</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">价格/晚</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">评分 &amp; 位置</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">为什么适合你们</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>⭐首选</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Pacific%20Pensionne%20Cebu" target="_blank" style="color:#B26A00;text-decoration:none;">Pacific Pensionne ↗</a></strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈$22<br>≈160 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">8.1 分<br>4200+ 评<br>步行到南巴士站</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">住客评价明确提到"near South bus terminal if heading to Oslob/Moalboal"——正是你们路线；近圣婴教堂、麦哲伦十字架、Taboan 市场买伴手礼。预算友好、干净。</td>
+        </tr>
+        <tr style="background:#FFFBF5;">
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>舒适升级</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=One%20Central%20Hotel%20Cebu" target="_blank" style="color:#B26A00;text-decoration:none;">One Central Hotel ↗</a></strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈$40<br>≈290 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">8.6 分<br>8000+ 评<br>步行到南巴士站</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">有泳池+健身+24h 前台，房间大，适合想落地泡个泳池放松的两人。位置同样贴南巴士站。</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>特色 Heritage</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Palm%20Grass%20Hotel%20Cebu" target="_blank" style="color:#B26A00;text-decoration:none;">Palm Grass Hotel ↗</a></strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈$35<br>≈255 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">8.1 分<br>2700+ 评<br>近南巴士站</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">本地 Heritage 风格设计酒店，有泳池，文艺男生会喜欢，离南巴士站约 1km。</td>
+        </tr>
+        <tr style="background:#FFFBF5;">
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>落地轻松备选</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Mactan%20Cebu%20airport%20hotels" target="_blank" style="color:#B26A00;text-decoration:none;">Mactan 机场酒店 ↗</a></strong><br><small style="color:#999;">（如 Goldberry / BAI 等）</small></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈$30-50</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">机场 5-10min</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">⚠️ 仅当 D1 太累不想过桥时选；D2 需 05:30 起床过桥进城到南巴士站，缓冲差，<strong>不推荐</strong>。</td>
+        </tr>
+      </table>
+      <p style="font-size:11.5px;color:#999;margin-top:10px;">💡 价格随季节浮动，以 Agoda/Booking 实时为准；两人一间，按"每间房/晚"计。建议订 <strong>可免费取消</strong> 的房型，台风季行程有变可退。</p>
+    </div>
+
+    <!-- ===== Day 1 视觉指引：路线图 + 实景 + 指示图 ===== -->
+    <div style="background:#F7FAFC;border:1px solid #D9E4EC;border-radius:14px;padding:18px;margin-bottom:16px;">
+      <p style="font-size:14px;font-weight:800;color:#0E7CAD;margin-bottom:4px;">🗺️ Day 1 路线 · 实景 · 指引</p>
+      <p style="font-size:11.5px;color:#7a8a96;margin-bottom:14px;">机场 → 过桥 → 市区酒店 → 晚饭 → 玩，一图看懂空间关系与流程（下方实景照片为维基共享资源真实授权图；想看成片风格的小红书实拍，可 <a href="https://www.xiaohongshu.com/search_result?keyword=%E5%AE%BF%E5%8A%A1" target="_blank" style="color:#0E7CAD;text-decoration:none;">点此在你自己设备的小红书搜「宿务」↗</a>）</p>
+
+      <p style="font-size:12.5px;font-weight:700;color:#1E7A45;margin:0 0 6px;">① 交通路线图（机场 → 市区）</p>
+      <svg viewBox="0 0 680 250" width="100%" style="display:block;background:#EAF4FA;border-radius:10px;">
+        <defs><marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,3 L0,6 Z" fill="#444"/></marker></defs>
+        <rect x="20" y="45" width="195" height="160" rx="14" fill="#DCEFE0" stroke="#7FB89A" stroke-width="2"/>
+        <text x="117" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#2E7D4F">麦克坦岛 Mactan</text>
+        <text x="117" y="114" text-anchor="middle" font-size="11" fill="#444">Mactan-Cebu 国际机场</text>
+        <text x="117" y="130" text-anchor="middle" font-size="11" fill="#444">CEB T1</text>
+        <text x="117" y="160" text-anchor="middle" font-size="12" font-weight="700" fill="#B26A00">✈️ 16:30 落地</text>
+        <text x="117" y="180" text-anchor="middle" font-size="10.5" fill="#888">入境清关 + 取行李</text>
+        <rect x="225" y="118" width="225" height="16" rx="4" fill="#C9A24B"/>
+        <text x="337" y="108" text-anchor="middle" font-size="11" font-weight="700" fill="#7a5a00">Mactan-Mandaue 桥</text>
+        <text x="337" y="152" text-anchor="middle" font-size="10.5" fill="#7a5a00">过桥 ≈18km · 晚高峰 45–60min</text>
+        <path d="M216,126 L223,126" stroke="#444" stroke-width="2" marker-end="url(#ah)"/>
+        <path d="M452,126 L459,126" stroke="#444" stroke-width="2" marker-end="url(#ah)"/>
+        <rect x="460" y="45" width="200" height="160" rx="14" fill="#FDEFD8" stroke="#E0B873" stroke-width="2"/>
+        <text x="560" y="68" text-anchor="middle" font-size="12.5" font-weight="700" fill="#B26A00">宿务市区 Cebu City</text>
+        <text x="560" y="94" text-anchor="middle" font-size="11" fill="#333">🏨 推荐酒店（近南巴士站）</text>
+        <text x="560" y="116" text-anchor="middle" font-size="11" fill="#333">🛍️ SM City / Robinson's</text>
+        <text x="560" y="138" text-anchor="middle" font-size="11" fill="#333">🚌 Cebu South Bus Terminal</text>
+        <text x="560" y="168" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1E7A45">⬅ D2 由此坐 4h 巴士去墨宝</text>
+      </svg>
+
+      <p style="font-size:12.5px;font-weight:700;color:#1E7A45;margin:16px 0 6px;">② 真实场景参考（实景照片 · 来源 Wikimedia Commons，CC 授权）</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        <figure style="margin:0;"><img src="images/day1/real/airport_arrivals.jpg" alt="宿务机场到达厅" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🛬 麦克坦-宿务机场到达厅（真实照片 · 公有领域 / Wikimedia Commons）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day1/real/cebu_street_jeepney.jpg" alt="宿务市区吉普尼" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🚐 宿务街景 · 特色吉普尼 Jeepney（摄 Øyvind Holmstad / CC BY-SA 4.0）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day1/real/lechon_dinner.jpg" alt="烤乳猪晚餐" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🍖 晚餐推荐 · 菲律宾烤乳猪 Lechon（摄 Bim24 / CC BY-SA 4.0）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day1/real/hilltop_night_view.jpg" alt="宿务城市夜景" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🌃 晚上玩法② · 宿务城市夜景（CC0 / Wikimedia Commons）</figcaption></figure>
+      </div>
+      <p style="font-size:11px;color:#999;margin:8px 0 0;line-height:1.6;">📌 说明：本想用浏览器在登录态下抓小红书「宿务」实拍，但实测小红书直接拦截了本机运行 IP（报错 <code>error_code=300012 IP存在风险</code>，连登录页都进不去），故无法从这边抓取。上方改为<strong>维基共享资源中的真实授权照片</strong>。你可在自己设备点 <a href="https://www.xiaohongshu.com/search_result?keyword=%E5%AE%BF%E5%8A%A1" target="_blank" style="color:#0E7CAD;text-decoration:none;">小红书搜「宿务」↗</a> 看博主实拍；若把具体笔记链接发我，我可代为抓取图片备份进 <code>images/day1/real/</code> 同一目录并嵌入本页。</p>
+
+      <p style="font-size:12.5px;font-weight:700;color:#1E7A45;margin:16px 0 6px;">③ 入境流程指示</p>
+      <svg viewBox="0 0 680 130" width="100%" style="display:block;">
+        <defs><marker id="bf" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1E7A45"/></marker></defs>
+        <rect x="8" y="35" width="118" height="62" rx="10" fill="#E8F3EC" stroke="#1E7A45" stroke-width="1.5"/>
+        <text x="67" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#1E7A45">① 到达 CEB T1</text>
+        <text x="67" y="80" text-anchor="middle" font-size="10.5" fill="#555">下机走入境通道</text>
+        <rect x="146" y="35" width="118" height="62" rx="10" fill="#E8F3EC" stroke="#1E7A45" stroke-width="1.5"/>
+        <text x="205" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#1E7A45">② eTravel 二维码</text>
+        <text x="205" y="80" text-anchor="middle" font-size="10.5" fill="#555">+ 返程机票/酒店单</text>
+        <rect x="284" y="35" width="118" height="62" rx="10" fill="#FFF3E0" stroke="#E0962A" stroke-width="1.5"/>
+        <text x="343" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#B26A00">③ 移民关盖章</text>
+        <text x="343" y="80" text-anchor="middle" font-size="10.5" fill="#555">14 天免签章</text>
+        <rect x="422" y="35" width="118" height="62" rx="10" fill="#E8F3EC" stroke="#1E7A45" stroke-width="1.5"/>
+        <text x="481" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#1E7A45">④ 取托运行李</text>
+        <text x="481" y="80" text-anchor="middle" font-size="10.5" fill="#555">两人分工看管</text>
+        <rect x="560" y="35" width="118" height="62" rx="10" fill="#E8F3EC" stroke="#1E7A45" stroke-width="1.5"/>
+        <text x="619" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#1E7A45">⑤ Grab 进市区</text>
+        <text x="619" y="80" text-anchor="middle" font-size="10.5" fill="#555">→ 酒店</text>
+        <line x1="127" y1="66" x2="143" y2="66" stroke="#1E7A45" stroke-width="2" marker-end="url(#bf)"/>
+        <line x1="265" y1="66" x2="281" y2="66" stroke="#1E7A45" stroke-width="2" marker-end="url(#bf)"/>
+        <line x1="403" y1="66" x2="419" y2="66" stroke="#1E7A45" stroke-width="2" marker-end="url(#bf)"/>
+        <line x1="541" y1="66" x2="557" y2="66" stroke="#1E7A45" stroke-width="2" marker-end="url(#bf)"/>
+      </svg>
+
+      <p style="font-size:12.5px;font-weight:700;color:#1E7A45;margin:16px 0 6px;">④ Grab 叫车步骤（机场 → 酒店）</p>
+      <svg viewBox="0 0 680 150" width="100%" style="display:block;">
+        <defs><marker id="gf" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#0A66C2"/></marker></defs>
+        <rect x="10" y="20" width="150" height="95" rx="10" fill="#EAF2FB" stroke="#0A66C2" stroke-width="1.5"/>
+        <text x="85" y="48" text-anchor="middle" font-size="12" font-weight="700" fill="#0A66C2">① 打开 Grab App</text>
+        <text x="85" y="70" text-anchor="middle" font-size="10.5" fill="#555">提前绑信用卡</text>
+        <text x="85" y="90" text-anchor="middle" font-size="10.5" fill="#555">选 Car / GrabCar</text>
+        <rect x="183" y="20" width="150" height="95" rx="10" fill="#EAF2FB" stroke="#0A66C2" stroke-width="1.5"/>
+        <text x="258" y="48" text-anchor="middle" font-size="12" font-weight="700" fill="#0A66C2">② 输入目的地</text>
+        <text x="258" y="70" text-anchor="middle" font-size="10.5" fill="#555">粘贴酒店英文名</text>
+        <text x="258" y="90" text-anchor="middle" font-size="10.5" fill="#555">确认上车点 T1</text>
+        <rect x="356" y="20" width="150" height="95" rx="10" fill="#EAF2FB" stroke="#0A66C2" stroke-width="1.5"/>
+        <text x="431" y="48" text-anchor="middle" font-size="12" font-weight="700" fill="#0A66C2">③ 确认车牌</text>
+        <text x="431" y="70" text-anchor="middle" font-size="10.5" fill="#555">核对车牌+司机</text>
+        <text x="431" y="90" text-anchor="middle" font-size="10.5" fill="#555">App 内付/到付</text>
+        <rect x="529" y="20" width="150" height="95" rx="10" fill="#EAF2FB" stroke="#0A66C2" stroke-width="1.5"/>
+        <text x="604" y="48" text-anchor="middle" font-size="12" font-weight="700" fill="#0A66C2">④ 上车点等候</text>
+        <text x="604" y="70" text-anchor="middle" font-size="10.5" fill="#555">T1 到达层门外</text>
+        <text x="604" y="90" text-anchor="middle" font-size="10.5" fill="#555">右侧上车区</text>
+        <line x1="161" y1="67" x2="179" y2="67" stroke="#0A66C2" stroke-width="2" marker-end="url(#gf)"/>
+        <line x1="334" y1="67" x2="352" y2="67" stroke="#0A66C2" stroke-width="2" marker-end="url(#gf)"/>
+        <line x1="507" y1="67" x2="525" y2="67" stroke="#0A66C2" stroke-width="2" marker-end="url(#gf)"/>
+      </svg>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time">~07:00</div>
+        <div class="tl-content"><strong>深圳北站</strong> 出发 → 高铁至<strong>香港西九龙站</strong>（预留 2h+ 到达机场）</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">09:25 - 11:50</div>
+        <div class="tl-content">✈️ <strong>HKG → MNL</strong>（5J273）→ 抵达马尼拉 T3</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">11:50 - 14:20</div>
+        <div class="tl-content">🛂 <strong>在马尼拉完成入境</strong>：移民检查 → 领取托运行李 → 海关 → Cebu Pacific Transfer Desk 交运行李 → 国内安检<br>
+        <small style="color:#888;">同一订单通常已有两段登机牌，但入境菲律宾仍须在首个入境机场提取行李过海关。3h10m 属可行但不宽裕的衔接，不在机场停留吃正餐。</small></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">15:00 - 16:30</div>
+        <div class="tl-content">✈️ <strong>MNL → CEB</strong>（5J581）→ 抵达宿务 T1 国内到达厅，领取行李</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">17:10 - 17:20</div>
+        <div class="tl-content">出到达大厅 → 到 <strong>Grab / 出租上车点</strong>（T1 到达层门外右侧，黄色出租柜台或 App 叫车）<br>
+        <small style="color:#888;">建议用 Grab App 叫车，价格透明可绑卡；避开航站楼"拉客司机"私下议价。</small></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">17:20 - 18:05</div>
+        <div class="tl-content">🚗 <strong>打车进市区</strong>（Mactan → 宿务市区过 Mactan-Mandaue 桥，约 18km，晚高峰 45-60min）→ 抵达酒店<br>
+        <small style="color:#888;">住市区近南巴士站，D2 早上打车 10-15min 即到 South Bus Terminal 坐去墨宝的 Ceres 巴士。</small></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">18:05 - 18:30</div>
+        <div class="tl-content">🏨 酒店正常办理入住 → 稍作洗漱换衣；若航班延误，提前通过平台告知酒店晚到</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">18:30 - 20:00</div>
+        <div class="tl-content">🍽️ 晚餐：<strong>House of Lechon</strong>（烤乳猪）/ <strong>STK ta Bay!</strong>（海鲜）/ <strong>Mang Inasal</strong>（烤鸡，便宜）三选一，酒店周边步行可达</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">20:00 - 21:15</div>
+        <div class="tl-content">🎯 晚上轻松活动（见下方「Day 1 晚上玩什么」）→ 顺路在 <strong>SM City Cebu / Robinson's Place</strong> 换汇、买水、激活电话卡</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">21:30</div>
+        <div class="tl-content">🌙 回酒店，充电 + 整理 D2 行李（OW 证、泳衣、防晒、相机）→ <strong>早休息</strong>（D2 要坐 4h 巴士去墨宝）</div>
+      </div>
+    </div>
+
+    <!-- Day 1 晚上玩什么 -->
+    <div style="background:#F4FBF6;border:1px solid #BFE3C9;border-radius:12px;padding:14px 18px;margin-top:12px;">
+      <p style="font-size:13px;font-weight:800;color:#1E7A45;margin-bottom:10px;">🎯 Day 1 晚上玩什么（3 选 1，D2 要早起建议别太嗨）</p>
+      <div style="font-size:12px;line-height:1.7;">
+        <p style="margin:0 0 8px;"><strong>① 轻松逛吃（推荐 ⭐）</strong>：SM City Cebu / Robinson's Place（市中心，打车 10min）。吹空调、换汇、买水、激活电话卡，楼下大食代吃顿菲律宾快餐，21:30 前回酒店。</p>
+        <p style="margin:0 0 8px;"><strong>② 夜景晚餐</strong>：打车去 <strong>Top of Cebu</strong> 山顶餐厅，俯瞰全城夜景 + 吃烤乳猪，氛围好；约 22:00 回，注意打车安全（用 Grab，记车牌）。</p>
+        <p style="margin:0;"><strong>③ 老城夜游（谨慎）</strong>：Colon Street 老城区夜市感强，但夜晚人流杂、扒手多，<strong>两人同行、手机挂绳、不露富</strong>，23:00 前回。新手首晚不建议。</p>
+      </div>
+    </div>
+    <div class="callout callout-warn" style="margin-top:12px;">
+      <strong>⏰ 时间管理提醒：</strong>深圳到香港西九龙高铁约 20 分钟 + 西九龙到机场快线约 24 分钟 = 至少预留 1h 交通。建议 07:00 前从深圳北站出发最稳妥。
+    </div>
+    <div class="callout callout-info" style="margin-top:8px;">
+      <strong>💡 马尼拉中转 3h10m 利用：</strong>时间刚好够取行李+重托+安检+吃个简餐，不建议离开航站楼。T3 有 Jollibee、Chowking、7-Eleven 和免税店可以逛。
+    </div>
+    <div class="cost-box">
+      <div class="cost-title">💰 当日费用</div>
+      <span class="cost-item">深圳北→西九龙高铁：≈200 RMB</span>
+      <span class="cost-item">机场快线：≈115 HKD（或巴士 A21 约 33 HKD）</span>
+      <span class="cost-item">Mactan→市区交通：≈150 PHP（Grab/公交）</span>
+      <span class="cost-item">🏨 住宿（1 晚，2人一间）：Pacific Pensionne ≈160 RMB 起 / 舒适款 ≈255-290 RMB</span>
+      <span class="cost-item">晚餐：200 PHP × 2人</span>
+      <span class="cost-item">行前零食：30 RMB</span>
+      <span class="cost-item">电话卡：128 RMB</span>
+    </div>
+  </div>
+</div>
+
+<!-- Day 2 -->
+<div class="day-card" id="day-2">
+  <div class="day-header">
+    <div class="day-num">Day 2 &nbsp;|&nbsp; 9月29日（周二）</div>
+    <div class="day-badge badge-transit">移动日 · 陆路 4h 巴士</div>
+  </div>
+  <div class="day-body">
+    <div class="route-line">
+      宿务市区 Cebu <span class="arrow">→</span> 南巴士站 <span class="arrow">→</span> 墨宝 Moalboal（Panagsama Beach）
+    </div>
+
+    <!-- Transit details card -->
+    <div style="background:#F0F7FA;border:1px solid var(--ocean-light);border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <p style="font-size:13px;font-weight:700;color:var(--ocean);margin-bottom:10px;">🚌 去墨宝交通详情（Ceres Liner 黄色巴士）</p>
+      <table style="width:100%;font-size:12.5px;border-collapse:collapse;">
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;width:96px;"><strong>出发地</strong></td><td style="border-bottom:1px solid #E0E4E8;">Cebu <strong>South Bus Terminal</strong>（N. Bacalso Ave，市区南巴士总站，紧挨 Day1 酒店）</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>坐哪班</strong></td><td style="border-bottom:1px solid #E0E4E8;">⚠️ 认准 <strong>"Bato via Barili" / "Badian" / "Moalboal"</strong> 字样<br><small style="color:#B23A00;">不要上 "via Oslob" 的车！那是去奥斯洛布方向，绕远且不顺路</small></td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>票价</strong></td><td style="border-bottom:1px solid #E0E4E8;">非空调 <strong>≈170 PHP</strong> / 空调 <strong>≈210 PHP</strong>（每 30–60 分钟一班，首班 ~03:00、末班 ~18:30–22:00）</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>车程</strong></td><td style="border-bottom:1px solid #E0E4E8;">约 <strong>3.5–4.5 小时</strong>（≈95km，沿海公路经 Carcar / Barili）</td></tr>
+        <tr><td style="padding:5px 8px;"><strong>到镇后</strong></td><td>在 <strong>Moalboal 镇(Poblacion)</strong> 主路 Jollibee 附近下车 → 转 <strong>tricycle 摩托三轮</strong> 到 Panagsama Beach（≈3.5km / 10–15min，包车 ≈150–200 PHP，拼车每人 ≈50 PHP）</td></tr>
+      </table>
+    </div>
+
+    <!-- 住宿怎么选 -->
+    <div style="background:#FFF8F0;border:1px solid #F0D9B5;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
+      <p style="font-size:13.5px;font-weight:800;color:#B26A00;margin-bottom:4px;">🏨 住宿怎么选（兼顾 D3–4 潜水与 D5 两人共同陆地线）</p>
+      <p style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.6;">
+        <strong>核心逻辑：</strong>小伙伴 D3–4 的 4 潜与 D5 待确认潜水都从 <strong>Neptune Diving Resort</strong> 周边出发，且沙丁鱼风暴、跳崖都在 <strong>Panagsama Beach（Basdiot）</strong>。所以 <strong>住 Panagsama 最省心</strong>——下楼即海、潜店就在门口，不用每天往返 White Beach。White Beach（Basdaku）沙子更白更安静，但要坐 tricycle 进出，潜水日不方便，<strong>不推荐作为潜水日住宿基地</strong>。
+      </p>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;">
+        <tr style="background:#FBE9CC;font-weight:700;color:#7a4a00;">
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">推荐</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">酒店</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">价格/晚</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">评分 &amp; 位置</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">为什么适合你们</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>⭐首选<br>（潜店同款）</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Neptune%20Diving%20Resort%20Moalboal" target="_blank" style="color:#B26A00;text-decoration:none;">Neptune Diving Resort ↗</a></strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈$40-50<br>≈290-360 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">8.7 分<br>48+ 评<br>Panagsama 沙滩</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">就在 Panagsama 沙滩、沙丁鱼风暴入口仅 10m，自带潜店（D3–4 固定 4 潜，D5 再决定是否加潜）。下楼即海。⚠️ 隔音一般（邻鸡舍 + 酒吧音乐），建议带耳塞。</td>
+        </tr>
+        <tr style="background:#FFFBF5;">
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>最佳口碑<br>（预算）</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Garden%20Village%20Resort%20Moalboal" target="_blank" style="color:#B26A00;text-decoration:none;">Garden Village Resort ↗</a></strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈£34<br>≈310 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">近 2000 评<br>带泳池花园</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">位于 Panagsama Road、Poblacion West，花园 + 泳池。到 Panagsama 潜店区约 2.4km，建议短程车；不要按“步行几分钟到沙滩”安排行李和潜水衔接。</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>安静文艺</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Herbs%20Guest%20House%20Moalboal" target="_blank" style="color:#B26A00;text-decoration:none;">Herbs Guest House ↗</a></strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈£21<br>≈190 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">209 评<br>近海有餐厅</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">位于 Tongo Point Road，安静并带餐厅；到 Panagsama 主潜店区约 20–30 分钟步行，或搭短程车。适合想观察当地生活、又不要求下楼就是潜店的住法。</td>
+        </tr>
+        <tr style="background:#FFFBF5;">
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>临海看龟</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Sea%20Turtle%20House%20Moalboal" target="_blank" style="color:#B26A00;text-decoration:none;">Sea Turtle House ↗</a></strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈£32<br>≈290 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">50 评<br>空调房</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>White Beach Looc、Barangay Saavedra 临海</strong>，不在 Panagsama。适合安静看海和海龟，不适合作为 D3–4 潜水日的就近住宿；去 Neptune / 沙丁鱼点需另安排车辆。</td>
+        </tr>
+      </table>
+      <p style="font-size:11.5px;color:#999;margin-top:10px;">💡 原估算「酒店 ≈236 RMB/晚」偏低；Neptune 实时约 290-360 RMB。价格随季节浮动，以 Booking/Agoda 实时为准；建议订 <strong>可免费取消</strong> 房型（台风季有变可退）。若选择 Sea Turtle House，需把它视为 White Beach 住宿并单独安排去 Panagsama 的交通。</p>
+    </div>
+
+    <!-- 视觉指引 -->
+    <div style="background:#F7FAFC;border:1px solid #D9E4EC;border-radius:14px;padding:18px;margin-bottom:16px;">
+      <p style="font-size:14px;font-weight:800;color:#0E7CAD;margin-bottom:4px;">🗺️ Day 2 路线 · 实景 · 指引</p>
+      <p style="font-size:11.5px;color:#7a8a96;margin-bottom:14px;">市区酒店 → 南巴士站 → 4h 巴士 → 墨宝镇转 tricycle → Panagsama Beach，一图看懂空间关系（实景照片为维基共享资源真实授权图）</p>
+
+      <p style="font-size:12.5px;font-weight:700;color:#1E7A45;margin:0 0 6px;">① 交通路线图（宿务市区 → 墨宝）</p>
+      <svg viewBox="0 0 680 250" width="100%" style="display:block;background:#EAF4FA;border-radius:10px;">
+        <defs>
+          <marker id="ah2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,3 L0,6 Z" fill="#444"/></marker>
+          <marker id="th2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#B26A00"/></marker>
+        </defs>
+        <rect x="18" y="55" width="150" height="140" rx="14" fill="#DCEFE0" stroke="#7FB89A" stroke-width="2"/>
+        <text x="93" y="92" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2E7D4F">宿务市区</text>
+        <text x="93" y="112" text-anchor="middle" font-size="11" fill="#444">Day1 酒店</text>
+        <text x="93" y="140" text-anchor="middle" font-size="11" fill="#444">🚕 Grab 10-15min</text>
+        <text x="93" y="162" text-anchor="middle" font-size="10.5" fill="#888">≈80-120 PHP</text>
+        <rect x="190" y="92" width="160" height="66" rx="12" fill="#FDEFD8" stroke="#E0B873" stroke-width="2"/>
+        <text x="270" y="118" text-anchor="middle" font-size="12" font-weight="700" fill="#B26A00">Cebu South Bus</text>
+        <text x="270" y="136" text-anchor="middle" font-size="12" font-weight="700" fill="#B26A00">Terminal</text>
+        <text x="270" y="153" text-anchor="middle" font-size="10" fill="#7a5a00">买 Ceres 票</text>
+        <path d="M168,125 L188,125" stroke="#444" stroke-width="2" marker-end="url(#ah2)"/>
+        <rect x="380" y="55" width="150" height="140" rx="14" fill="#FDEFD8" stroke="#E0B873" stroke-width="2"/>
+        <text x="455" y="90" text-anchor="middle" font-size="12.5" font-weight="700" fill="#B26A00">墨宝镇 Poblacion</text>
+        <text x="455" y="110" text-anchor="middle" font-size="11" fill="#444">Jollibee 附近下车</text>
+        <text x="455" y="134" text-anchor="middle" font-size="11" font-weight="700" fill="#1E7A45">🚌 约 95km / 4h</text>
+        <text x="455" y="156" text-anchor="middle" font-size="10.5" fill="#888">空调车 ≈210 PHP</text>
+        <path d="M350,125 L378,125" stroke="#444" stroke-width="2" marker-end="url(#ah2)"/>
+        <text x="364" y="118" text-anchor="middle" font-size="14">🚌</text>
+        <rect x="552" y="92" width="120" height="66" rx="12" fill="#DCEFE0" stroke="#7FB89A" stroke-width="2"/>
+        <text x="612" y="116" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2E7D4F">Panagsama</text>
+        <text x="612" y="134" text-anchor="middle" font-size="11" font-weight="700" fill="#2E7D4F">Beach</text>
+        <text x="612" y="151" text-anchor="middle" font-size="10" fill="#444">潜水区 3.5km</text>
+        <path d="M530,125 L550,125" stroke="#B26A00" stroke-width="2" marker-end="url(#th2)"/>
+        <text x="540" y="117" text-anchor="middle" font-size="13">🛺</text>
+        <text x="540" y="150" text-anchor="middle" font-size="9.5" fill="#B26A00">tricycle</text>
+        <text x="540" y="162" text-anchor="middle" font-size="9.5" fill="#B26A00">10-15min/150-200P</text>
+      </svg>
+
+      <p style="font-size:12.5px;font-weight:700;color:#1E7A45;margin:16px 0 6px;">② 真实场景参考（实景照片 · 来源 Wikimedia Commons，CC 授权）</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        <figure style="margin:0;"><img src="images/day2/real/sardine_run.jpg" alt="墨宝沙丁鱼风暴" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🐟 Panagsama 沙丁鱼风暴（摄 Iampjanz / CC BY-SA 4.0）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day2/real/panagsama_beach.jpg" alt="Panagsama沙滩" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏖️ Panagsama Beach 沙滩（摄 Paul Grach / CC BY 2.0）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day2/real/ceres_bus.jpg" alt="Ceres巴士" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🚌 Ceres Liner 黄色巴士（摄 Kguirnela / CC BY 3.0）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day2/real/pescador_island.jpg" alt="Pescador岛潜点" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏝️ Pescador Island 潜点（待确认去不去 / CC0）</figcaption></figure>
+      </div>
+      <p style="font-size:11px;color:#999;margin:8px 0 0;line-height:1.6;">📌 说明：上方为维基共享资源真实授权照片（沙丁鱼风暴 / Panagsama 沙滩 / Ceres 巴士 / Pescador 岛）。想看博主实拍可 <a href="https://www.xiaohongshu.com/search_result?keyword=%E5%A2%A8%E5%AE%9D%20%E5%AE%BF%E5%8A%A1" target="_blank" style="color:#0E7CAD;text-decoration:none;">点此在你自己设备的小红书搜「墨宝 宿务」↗</a>；本机 IP 被小红书风控拦截（error 300012），无法从这边抓取。</p>
+
+      <p style="font-size:12.5px;font-weight:700;color:#1E7A45;margin:16px 0 6px;">③ 巴士乘车流程指示</p>
+      <svg viewBox="0 0 680 130" width="100%" style="display:block;">
+        <defs><marker id="bf2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#1E7A45"/></marker></defs>
+        <rect x="8" y="35" width="118" height="62" rx="10" fill="#E8F3EC" stroke="#1E7A45" stroke-width="1.5"/>
+        <text x="67" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#1E7A45">① 到南巴士站</text>
+        <text x="67" y="80" text-anchor="middle" font-size="10.5" fill="#555">Grab 10-15min</text>
+        <rect x="146" y="35" width="118" height="62" rx="10" fill="#FFF3E0" stroke="#E0962A" stroke-width="1.5"/>
+        <text x="205" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#B26A00">② 窗口买票</text>
+        <text x="205" y="76" text-anchor="middle" font-size="10" fill="#555">认准 Bato via</text>
+        <text x="205" y="90" text-anchor="middle" font-size="10" fill="#555">Barili/Moalboal</text>
+        <rect x="284" y="35" width="118" height="62" rx="10" fill="#E8F3EC" stroke="#1E7A45" stroke-width="1.5"/>
+        <text x="343" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#1E7A45">③ 上车放行李</text>
+        <text x="343" y="80" text-anchor="middle" font-size="10.5" fill="#555">车底舱+占座</text>
+        <rect x="422" y="35" width="118" height="62" rx="10" fill="#E8F3EC" stroke="#1E7A45" stroke-width="1.5"/>
+        <text x="481" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#1E7A45">④ 车上 4h</text>
+        <text x="481" y="76" text-anchor="middle" font-size="10" fill="#555">备零食/水/</text>
+        <text x="481" y="90" text-anchor="middle" font-size="10" fill="#555">薄外套(空调冷)</text>
+        <rect x="560" y="35" width="118" height="62" rx="10" fill="#E8F3EC" stroke="#1E7A45" stroke-width="1.5"/>
+        <text x="619" y="62" text-anchor="middle" font-size="12" font-weight="700" fill="#1E7A45">⑤ 转 tricycle</text>
+        <text x="619" y="80" text-anchor="middle" font-size="10.5" fill="#555">到 Panagsama</text>
+        <line x1="127" y1="66" x2="143" y2="66" stroke="#1E7A45" stroke-width="2" marker-end="url(#bf2)"/>
+        <line x1="265" y1="66" x2="281" y2="66" stroke="#1E7A45" stroke-width="2" marker-end="url(#bf2)"/>
+        <line x1="403" y1="66" x2="419" y2="66" stroke="#1E7A45" stroke-width="2" marker-end="url(#bf2)"/>
+        <line x1="541" y1="66" x2="557" y2="66" stroke="#1E7A45" stroke-width="2" marker-end="url(#bf2)"/>
+      </svg>
+
+      <p style="font-size:12.5px;font-weight:700;color:#1E7A45;margin:16px 0 6px;">④ 沙丁鱼风暴浮潜步骤（岸边即可，不用船）</p>
+      <svg viewBox="0 0 680 130" width="100%" style="display:block;">
+        <defs><marker id="sf2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#0A66C2"/></marker></defs>
+        <rect x="8" y="35" width="118" height="62" rx="10" fill="#EAF2FB" stroke="#0A66C2" stroke-width="1.5"/>
+        <text x="67" y="62" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0A66C2">① 租浮潜装备</text>
+        <text x="67" y="80" text-anchor="middle" font-size="10" fill="#555">≈100-150 PHP</text>
+        <rect x="146" y="35" width="118" height="62" rx="10" fill="#EAF2FB" stroke="#0A66C2" stroke-width="1.5"/>
+        <text x="205" y="62" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0A66C2">② 海滩下水</text>
+        <text x="205" y="80" text-anchor="middle" font-size="10" fill="#555">Panagsama 岸边</text>
+        <rect x="284" y="35" width="118" height="62" rx="10" fill="#FFF3E0" stroke="#E0962A" stroke-width="1.5"/>
+        <text x="343" y="58" text-anchor="middle" font-size="11.5" font-weight="700" fill="#B26A00">③ 沙丁鱼风暴</text>
+        <text x="343" y="76" text-anchor="middle" font-size="10" fill="#555">百万沙丁鱼群</text>
+        <text x="343" y="90" text-anchor="middle" font-size="10" fill="#555">免船! 岸边就有</text>
+        <rect x="422" y="35" width="118" height="62" rx="10" fill="#EAF2FB" stroke="#0A66C2" stroke-width="1.5"/>
+        <text x="481" y="62" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0A66C2">④ 常遇海龟</text>
+        <text x="481" y="80" text-anchor="middle" font-size="10" fill="#555">+ 跳崖可选</text>
+        <rect x="560" y="35" width="118" height="62" rx="10" fill="#EAF2FB" stroke="#0A66C2" stroke-width="1.5"/>
+        <text x="619" y="62" text-anchor="middle" font-size="11.5" font-weight="700" fill="#0A66C2">⑤ 日落回</text>
+        <text x="619" y="80" text-anchor="middle" font-size="10" fill="#555">沙滩酒吧小酌</text>
+        <line x1="127" y1="66" x2="143" y2="66" stroke="#0A66C2" stroke-width="2" marker-end="url(#sf2)"/>
+        <line x1="265" y1="66" x2="281" y2="66" stroke="#0A66C2" stroke-width="2" marker-end="url(#sf2)"/>
+        <line x1="403" y1="66" x2="419" y2="66" stroke="#0A66C2" stroke-width="2" marker-end="url(#sf2)"/>
+        <line x1="541" y1="66" x2="557" y2="66" stroke="#0A66C2" stroke-width="2" marker-end="url(#sf2)"/>
+      </svg>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time">06:30</div>
+        <div class="tl-content"><strong>起床 + 早餐</strong>：酒店早餐或附近 Jollibee / Mang Inasal；整理 D2 行李（OW 证、泳衣、防晒、相机、耳塞）</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">07:00 - 07:20</div>
+        <div class="tl-content">🚕 <strong>Grab / 出租 → Cebu South Bus Terminal</strong>（市区到南巴士站约 10-15min，Grab ≈80-120 PHP；或坐 02B 吉普尼更便宜）<br><small style="color:#888;">Day1 酒店选在市区近南巴士站的意义就在这：几分钟就到。</small></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">07:20 - 07:40</div>
+        <div class="tl-content">🎫 <strong>南巴士站买 Ceres 票</strong>：到 Ceres Liner 窗口，买 <strong>"Bato via Barili" 或 "Moalboal"</strong> 班次（⚠️ <strong>不要选 via Oslob</strong>！方向错）；空调车 ≈210 PHP/人；告诉售票员你们在 <strong>Panagsama Beach / Basdiot</strong> 下</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">07:40 - 08:00</div>
+        <div class="tl-content">🚌 <strong>上车</strong>：把大件行李放车底行李舱、锁好；占好相连座位，两人坐一起方便看行李</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">08:00 - 12:00</div>
+        <div class="tl-content">🛣️ <strong>巴士行驶 ≈4h</strong>（约 95km，沿 N. Bacalso Ave 南行，经 Carcar、Barili 等沿海小镇）<br><small style="color:#888;">车上建议：备零食 + 水（非每站都停餐厅）、空调偏冷带薄外套、下载离线地图、可补觉。沿途是菲式乡村海岸风光。</small></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">12:00 - 12:15</div>
+        <div class="tl-content">📍 抵达 <strong>Moalboal 镇(Poblacion)</strong> 主路，司机在 Jollibee 附近放客；部分车会拐进 Basdiot 岔路，可让乘务在 Panagsama 路口放下</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">12:15 - 12:35</div>
+        <div class="tl-content">🛺 <strong>转 tricycle 到 Panagsama Beach</strong>（≈3.5km / 10-15min）；包车 ≈150-200 PHP（两人分摊），或拼车每人 ≈50 PHP<br><small style="color:#888;">把酒店名给司机看，Panagsama 路窄弯多，确认送到潜店门口。</small></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">12:35 - 13:00</div>
+        <div class="tl-content">🏨 <strong>抵达 Neptune Diving Resort / 酒店</strong>：14:00 才正式入住，先把行李寄存在前台，轻装去吃午饭</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">13:00 - 14:30</div>
+        <div class="tl-content">🍽️ <strong>午餐</strong>：酒店餐厅 Lantaw 或 Panagsama 海边餐厅（烤鱼、菲律宾饭、芒果冰沙），人均 ≈200-300 PHP</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">14:30 - 15:30</div>
+        <div class="tl-content">🤿 <strong>去潜店前台</strong>：先确认 D3–4 的 <strong>4 潜</strong>，并询问 D5 两潜临时决定的最晚确认时间与改价规则；需要浮潜才租装备（面镜 / 呼吸管 / 脚蹼参考 ≈100-150 PHP）</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">15:30 - 18:00</div>
+        <div class="tl-content">🐟 <strong>Panagsama 沙丁鱼风暴浮潜（⭐今日重点）</strong>：从海滩直接下水，<strong>不用船</strong>，岸边就有百万沙丁鱼群盘旋 + 常遇海龟；想刺激可去附近 <strong>跳崖 cliff jump</strong><br><small style="color:#888;">下午水况也清晰，但清晨人更少；今日先踩点，D3 起连续潜水。</small></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">18:00 - 19:30</div>
+        <div class="tl-content">🌅 回酒店冲凉，傍晚在 <strong>Panagsama 沙滩酒吧</strong> 喝一杯看日落（Happy Hour 常有）</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">19:30 - 21:00</div>
+        <div class="tl-content">🍤 <strong>晚餐</strong>：Panagsama 海边餐厅（烤海鲜 / 菲律宾菜 / 西式），人均 ≈250-350 PHP</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">21:30</div>
+        <div class="tl-content">🌙 <strong>早休</strong>：D3 起连续 3 天潜水，务必养精蓄锐。⚠️ Neptune 附近夜间有鸡叫 + 酒吧音乐，<strong>建议带耳塞</strong>。</div>
+      </div>
+    </div>
+
+    <!-- Day 2 晚上玩什么 -->
+    <div style="background:#F4FBF6;border:1px solid #BFE3C9;border-radius:12px;padding:14px 18px;margin-top:12px;">
+      <p style="font-size:13px;font-weight:800;color:#1E7A45;margin-bottom:10px;">🎯 Day 2 晚上玩什么（3 选 1，明天开始潜水建议别太嗨）</p>
+      <div style="font-size:12px;line-height:1.7;">
+        <p style="margin:0 0 8px;"><strong>① 沙滩酒吧看日落小酌（推荐 ⭐）</strong>：Panagsama 有几家临海酒吧（Chilli Bar / Survivors 等），Happy Hour 喝一杯听海浪，22:00 前回。</p>
+        <p style="margin:0 0 8px;"><strong>② 海边夜市小吃</strong>：沿街烤海鲜、炸物、水果冰沙，边走边吃，感受背包客小镇夜生活。</p>
+        <p style="margin:0;"><strong>③ 早休（最推荐给潜水日）</strong>：D3 一早潜水，21:30 前睡，保存体力。</p>
+      </div>
+    </div>
+    <div class="callout callout-warn" style="margin-top:12px;">
+      <strong>⏰ 时间管理提醒：</strong>首班巴士约 03:00、末班约 18:30-22:00，上午班次充足，不必赶最早；但建议 <strong>08:00 前发车</strong>，确保 12:00 前到镇、下午能浮潜踩点。若错过直达，可先坐到 Bato 方向再转，但更折腾。
+    </div>
+    <div class="callout callout-info" style="margin-top:8px;">
+      <strong>💡 关键避坑：</strong>① 认准 "Bato via Barili" 不是 "via Oslob"；② 务必提前说 Panagsama，否则默认放镇上；③ 空调车冷，带薄外套；④ tricycle 先谈价再上车；⑤ 现金为主，备够 PHP 小额。
+    </div>
+    <div class="cost-box">
+      <div class="cost-title">💰 当日费用</div>
+      <span class="cost-item">Ceres 空调巴士：≈210 PHP/人</span>
+      <span class="cost-item">Tricycle 到 Panagsama：≈150-200 PHP（两人包车）</span>
+      <span class="cost-item">午餐：≈250 PHP × 2人</span>
+      <span class="cost-item">浮潜装备租赁：≈100-150 PHP/人（自带可省）</span>
+      <span class="cost-item">晚餐：≈300 PHP × 2人</span>
+      <span class="cost-item">🏨 住宿（1 晚，2人一间）：Neptune ≈290-360 RMB（原估 236 偏低）</span>
+      <span class="cost-item">🐟 沙丁鱼风暴浮潜：岸边数米即免费（装备租或带）</span>
+    </div>
+  </div>
+</div>
+
+<!-- Day 3-5 -->
+<div class="day-card" id="day-3-5">
+  <div class="day-header">
+    <div class="day-num">Day 3-5 &nbsp;|&nbsp; 9月30日（周三）— 10月02日（周五）</div>
+    <div class="day-badge badge-dive">🤿+🚶 墨宝 3 天 · 双轨并行</div>
+  </div>
+  <div class="day-body">
+    <div class="route-line">
+      🤿 Moalboal 潜水基地 · Panagsama Beach &nbsp;|&nbsp; 一人潜水、一人不潜水
+    </div>
+
+    <!-- 潜店信息卡（共享） -->
+    <div style="background:linear-gradient(135deg,#E0F2FE 0%,#BAE6FD 100%);border:1px solid #38BDF8;border-radius:14px;padding:18px 22px;margin-bottom:16px;">
+      <p style="font-size:14px;font-weight:800;color:#0369A1;margin:0 0 12px;">🏆 潜店：Neptune Diving Resort Moalboal（两人同住，小伙伴在此潜水）</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;font-size:12px;color:#334155;line-height:1.7;">
+        <div>📍 <strong>地址：</strong>Panagsama Beach, Moalboal, Cebu 6032</div>
+        <div>⭐ <strong>资质：</strong>PADI 五星教练发展中心（IDC）</div>
+        <div>👥 <strong>潜导比：</strong>最多 5 人 / 导</div>
+        <div>🌡️ <strong>水温：</strong>27–30°C（建议 3mm 湿衣）</div>
+        <div>👁️ <strong>能见度：</strong>15–30m（雨季可能降至 10–15m）</div>
+        <div>📞 <strong>官网：</strong><a href="https://www.neptunediving.com" style="color:#0284C7;text-decoration:none;">neptunediving.com ↗</a></div>
+      </div>
+    </div>
+
+    <!-- 潜数与报价（小伙伴） -->
+    <div style="background:#FFFBEB;border:1px solid #FACC15;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
+      <p style="font-size:13.5px;font-weight:800;color:#A16207;margin:0 0 10px;">💰 小伙伴 · 4 潜基础 / 6 潜备选报价</p>
+      <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
+        <tr style="background:#FEF3C7;"><th style="padding:6px 10px;border:1px solid #FDE68A;text-align:left;">项目</th><th style="padding:6px 10px;border:1px solid #FDE68A;text-align:right;">价格（PHP）</th><th style="padding:6px 10px;border:1px solid #FDE68A;text-align:right;">≈ RMB</th><th style="padding:6px 10px;border:1px solid #FDE68A;text-align:left;">说明</th></tr>
+        <tr><td style="padding:6px 10px;border:1px solid #FDE68A;"><strong>6 Dive Package（含装备租赁）</strong></td><td style="padding:6px 10px;border:1px solid #FDE68A;text-align:right;">₱7,200</td><td style="padding:6px 10px;border:1px solid #FDE68A;text-align:right;">≈ ¥783</td><td style="padding:6px 10px;border:1px solid #FDE68A;">含全套装备 + 海洋公园费 + 潜导 + 气瓶 + 配重<br><small>仅限岸潜+船潜（夜潜/高氧另计）</small></td></tr>
+        <tr><td style="padding:6px 10px;border:1px solid #FDE68A;">6 Dive Package（自带装备）</td><td style="padding:6px 10px;border:1px solid #FDE68A;text-align:right;">₱6,600</td><td style="padding:6px 10px;border:1px solid #FDE68A;text-align:right;">≈ ¥717</td><td style="padding:6px 10px;border:1px solid #FDE68A;">其他同上，省掉装备租费</td></tr>
+        <tr><td style="padding:6px 10px;border:1px solid #FDE68A;">单次岸潜（含装备）</td><td style="padding:6px 10px;border:1px solid #FDE68A;text-align:right;">₱1,400</td><td style="padding:6px 10px;border:1px solid #FDE68A;text-align:right;">≈ ¥152</td><td style="padding:6px 10px;border:1px solid #FDE68A;">House Reef 岸潜</td></tr>
+        <tr><td style="padding:6px 10px;border:1px solid #FDE68A;">单次船潜（含装备）</td><td style="padding:6px 10px;border:1px solid #FDE68A;text-align:right;">₱1,600</td><td style="padding:6px 10px;border:1px solid #FDE68A;text-align:right;">≈ ¥174</td><td style="padding:6px 10px;border:1px solid #FDE68A;">Pescador Island 等外岛潜点</td></tr>
+        <tr><td style="padding:6px 10px;border:1px solid #FDE68A;">夜潜（含装备）</td><td style="padding:6px 10px;border:1px solid #FDE68A;text-align:right;">₱1,800</td><td style="padding:6px 10px;border:1px solid #FDE68A;text-align:right;">≈ ¥196</td><td style="padding:6px 10px;border:1px solid #FDE68A;">含水下灯，House Reef 夜潜找青蛙鱼</td></tr>
+        <tr style="background:#FEF3C7;"><td colspan="4" style="padding:6px 10px;border:1px solid #FDE68A;font-size:11px;color:#666;">📌 D3–4 先订 4 潜；D5 两潜待确认。4 潜没有在此锁定套餐价，应直接问潜店定制报价、最晚加潜时间和取消规则。若最终潜满 6 次，再比较 ₱7,200 套餐是否更划算。价格均需出发前复核。</td></tr>
+      </table>
+    </div>
+
+    <!-- 潜点地图（共享参考） -->
+    <p style="font-size:12.5px;font-weight:700;color:#0369A1;margin:16px 0 8px;">🗺️ 墨宝核心潜点一览（D3–4 固定，D5 待确认）</p>
+    <table style="width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:14px;">
+      <thead>
+        <tr style="background:#E0F2FE;"><th style="padding:7px 9px;border:1px solid #BAE6FD;text-align:left;">潜点名称</th><th style="padding:7px 9px;border:1px solid #BAE6FD;text-align:center;width:70px;">深度</th><th style="padding:7px 9px;border:1px solid #BAE6FD;text-align:center;width:85px;">难度</th><th style="padding:7px 9px;border:1px solid #BAE6FD;text-align:center;width:65px;">方式</th><th style="padding:7px 9px;border:1px solid #BAE6FD;text-align:left;">看点</th></tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:6px 9px;border:1px solid #BAE6FD;"><strong>Sardine Run 沙丁鱼风暴</strong></td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">1–20m</td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">所有级别</td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">岸潜 ⭐</td><td style="padding:6px 9px;border:1px solid #BAE6FD;">百万沙丁鱼球 + 杰克鱼/鲭鱼捕猎 + 偶遇长尾鲨</td></tr>
+        <tr style="background:#F0F9FF;"><td style="padding:6px 9px;border:1px solid #BAE6FD;"><strong>Pescador Island 佩斯卡多尔岛</strong></td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">5–65m</td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">OW+</td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">船 10-15min</td><td style="padding:6px 9px;border:1px solid #BAE6FD;">⭐<strong>Cathedral Cave 大教堂洞穴</strong>(28m→18m) + 450+种硬珊瑚 + 白尖礁鲨 + 海龟 + 梭鱼群</td></tr>
+        <tr><td style="padding:6px 9px;border:1px solid #BAE6FD;"><strong>Kasai Wall 卡赛墙</strong></td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">5–40m</td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">OW+</td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">岸/船</td><td style="padding:6px 9px;border:1px solid #BAE6FD;">垂直峭壁 + 140m 洞穴系统 + 软珊瑚/海扇 + 青蛙鱼 + 裸鳃亚目</td></tr>
+        <tr style="background:#F0F9FF;"><td style="padding:6px 9px;border:1px solid #BAE6FD;"><strong>Tongo Point 通戈角保护区</strong></td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">5–55m</td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">OW+</td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">船</td><td style="padding:6px 9px;border:1px solid #BAE6FD;">海洋保护区 + 健康珊瑚 + 小洞穴 + 海龟常驻</td></tr>
+        <tr><td style="padding:6px 9px;border:1px solid #BAE6FD;"><strong>House Reef (Panagsama)</strong></td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">3–50m+</td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">所有级别</td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">岸潜</td><td style="padding:6px 9px;border:1px solid #BAE6FD;">夜潜首选！青蛙鱼 + 裸鳃 + 螳螂虾 + 海蛇 + 无限岸潜权限</td></tr>
+        <tr style="background:#F0F9FF;"><td style="padding:6px 9px;border:1px solid #BAE6FD;"><strong>Airplane Wreck 飞机残骸</strong></td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">20–22m</td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">AOW</td><td style="padding:6px 9px;border:1px solid #BAE6FD;text-align:center;">船</td><td style="padding:6px 9px;border:1px solid #BAE6FD;">90年代沉没的 Cessna 双座飞机 + 人工礁石 + 成群鱼环绕</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 双轨总览 -->
+    <p style="font-size:12.5px;font-weight:700;color:#0369A1;margin:16px 0 8px;">📋 双轨总览（每天对照）</p>
+    <table style="width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:14px;">
+      <thead>
+        <tr style="background:#EEF2F6;"><th style="padding:7px 9px;border:1px solid #D6DEE6;text-align:left;width:90px;">日期</th><th style="padding:7px 9px;border:1px solid #D6DEE6;text-align:left;background:#E0F2FE;">🤿 小伙伴（潜水）</th><th style="padding:7px 9px;border:1px solid #D6DEE6;text-align:left;background:#FFEDD5;">🚶 你（不潜水）</th></tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:6px 9px;border:1px solid #D6DEE6;font-weight:700;">Day 3<br>9/30</td><td style="padding:6px 9px;border:1px solid #D6DEE6;">2 潜：House Reef 热身 + Pescador Cathedral Cave</td><td style="padding:6px 9px;border:1px solid #D6DEE6;background:#FFF7ED;">向导陪同沙丁鱼浮潜（可选）+ White Beach + 旅游服务定价观察</td></tr>
+        <tr style="background:#F8FAFC;"><td style="padding:6px 9px;border:1px solid #D6DEE6;font-weight:700;">Day 4<br>10/1</td><td style="padding:6px 9px;border:1px solid #D6DEE6;">2 潜：Pescador 深入 + Sardine Run 沙丁鱼球</td><td style="padding:6px 9px;border:1px solid #D6DEE6;background:#FFF7ED;">Kawasan 认证向导线 / 墨宝镇区文化商业线（二选一）</td></tr>
+        <tr><td style="padding:6px 9px;border:1px solid #D6DEE6;font-weight:700;">Day 5<br>10/2</td><td style="padding:6px 9px;border:1px solid #D6DEE6;"><strong>待确认：</strong>2 潜，或不潜水并加入两人共同陆地线</td><td style="padding:6px 9px;border:1px solid #D6DEE6;background:#FFF7ED;">两人共同慢走市场 + 本地午餐 + 打包；若伙伴潜水，你单独执行</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px;color:#888;margin:0 0 14px;">💡 左蓝=小伙伴潜水轨，右橙=你不潜水轨。两人住同一酒店，上午分头行动、傍晚汇合吃饭。</p>
+
+    <!-- 真实场景照片（潜水轨） -->
+    <p style="font-size:12.5px;font-weight:700;color:#0369A1;margin:16px 0 6px;">📸 潜水实景参考（维基共享资源 CC 授权）</p>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px;">
+      <figure style="margin:0;"><img src="images/day3/real/scuba_diving.jpg" alt="墨宝潜水员准备入水" style="width:100%;border-radius:10px;display:block;border:1px solid #BAE6FD;"><figcaption style="font-size:11px;color:#555;margin-top:5px;text-align:center;">🤿 潜水员准备入水 — Panagsama Beach 岸边即下海</figcaption></figure>
+      <figure style="margin:0;"><img src="images/day3/real/turtle_encounter.jpg" alt="绿海龟" style="width:100%;border-radius:10px;display:block;border:1px solid #BAE6FD;"><figcaption style="font-size:11px;color:#555;margin-top:5px;text-align:center;">🐢 几乎每潜都遇到的绿海龟 — 墨宝是主要海龟保护区</figcaption></figure>
+      <figure style="margin:0;"><img src="images/day3/real/underwater_coral.jpg" alt="珊瑚礁" style="width:100%;border-radius:10px;display:block;border:1px solid #BAE6FD;"><figcaption style="font-size:11px;color:#555;margin-top:5px;text-align:center;">🪸 Pescador 珊瑚墙 — 硬珊瑚种类最集中区域之一</figcaption></figure>
+      <figure style="margin:0;"><img src="images/day3/real/pescador_wall.jpg" alt="沙丁鱼风暴" style="width:100%;border-radius:10px;display:block;border:1px solid #BAE6FD;"><figcaption style="font-size:11px;color:#555;margin-top:5px;text-align:center;">🐟 沙丁鱼风暴 — 国家地理评"世界最惊艳潜点之一"</figcaption></figure>
+    </div>
+
+    <!-- 逐日双栏 -->
+    <p style="font-size:13px;font-weight:800;color:#0F172A;margin:18px 0 10px;">🗓️ 逐日双轨对照</p>
+
+    <!-- ===== Day 3 ===== -->
+    <div style="font-size:13px;font-weight:800;color:#0F172A;margin:0 0 8px;">Day 3 &nbsp;|&nbsp; 9月30日（周三）— 热身日</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:16px;">
+      <!-- 左：潜水 -->
+      <div style="border:2px solid #38BDF8;border-radius:12px;padding:12px 14px;background:#F0F9FF;">
+        <p style="font-size:12.5px;font-weight:800;color:#0369A1;margin:0 0 8px;">🤿 小伙伴 · 潜水 2 潜</p>
+        <div class="timeline" style="margin:0;">
+          <div class="tl-item"><div class="tl-time">07:15</div><div class="tl-content">到潜店报到，带 OW 证 + 确认装备尺寸</div></div>
+          <div class="tl-item"><div class="tl-time">08:30</div><div class="tl-content"><strong>Dive 1 House Reef 岸潜</strong>：热身 + 看海龟/青蛙鱼（5-12m）</div></div>
+          <div class="tl-item"><div class="tl-time">10:30</div><div class="tl-content"><strong>Dive 2 Pescador 船潜</strong>：大教堂洞穴 Cathedral Cave（28m→18m 烟囱穿越）</div></div>
+          <div class="tl-item"><div class="tl-time">12:00</div><div class="tl-content">冲凉 + 午餐 + 下午休息恢复</div></div>
+        </div>
+      </div>
+      <!-- 右：不潜水 -->
+      <div style="border:2px solid #FB923C;border-radius:12px;padding:12px 14px;background:#FFF7ED;">
+        <p style="font-size:12.5px;font-weight:800;color:#C2410C;margin:0 0 8px;">🚶 你 · 不潜水版</p>
+        <div class="timeline" style="margin:0;">
+          <div class="tl-item"><div class="tl-time">07:00</div><div class="tl-content">与小伙伴一起早餐，确认潜店结束时间、手机电量和 17:30 汇合点</div></div>
+          <div class="tl-item"><div class="tl-time">08:30</div><div class="tl-content"><strong>沙丁鱼风暴浮潜（可选）</strong>：通过潜店/酒店找当地向导，穿救生衣或带浮力装备，绝不单独下水；不想玩水则改走 Panagsama 海岸和小店</div></div>
+          <div class="tl-item"><div class="tl-time">10:30</div><div class="tl-content">回岸冲淡 + 早午餐；向装备店问清租赁、向导和平台抽成，记录公开价格，不追问敏感收入</div></div>
+          <div class="tl-item"><div class="tl-time">13:30</div><div class="tl-content">tricycle 去 <strong>White Beach（Basdaku）</strong> ≈15min，散步、咖啡和海滩服务观察；只选一位方便的店主聊 10 分钟</div></div>
+          <div class="tl-item"><div class="tl-time">17:30</div><div class="tl-content">回 Panagsama，与小伙伴汇合看日落、吃晚饭，各自分享今天最有意思的一件事</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+          <img src="images/day3/real/sardine_snorkel.jpg" alt="沙丁鱼浮潜" style="width:100%;border-radius:8px;display:block;border:1px solid #FDBA74;">
+          <img src="images/day3/real/white_beach.jpg" alt="White Beach" style="width:100%;border-radius:8px;display:block;border:1px solid #FDBA74;">
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Day 4 ===== -->
+    <div style="font-size:13px;font-weight:800;color:#0F172A;margin:0 0 8px;">Day 4 &nbsp;|&nbsp; 10月01日（周四 国庆）— 重头戏日</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:16px;">
+      <!-- 左：潜水 -->
+      <div style="border:2px solid #38BDF8;border-radius:12px;padding:12px 14px;background:#F0F9FF;">
+        <p style="font-size:12.5px;font-weight:800;color:#0369A1;margin:0 0 8px;">🤿 小伙伴 · 潜水 2 潜</p>
+        <div class="timeline" style="margin:0;">
+          <div class="tl-item"><div class="tl-time">08:30</div><div class="tl-content"><strong>Dive 3 Pescador 深入</strong>：洞穴 + 峡谷 + 大型鱼类（梭鱼/杰克鱼群）</div></div>
+          <div class="tl-item"><div class="tl-time">10:30</div><div class="tl-content"><strong>Dive 4 Sardine Run 沙丁鱼风暴</strong>：百万沙丁鱼球中穿行！岸边下水 5-18m</div></div>
+          <div class="tl-item"><div class="tl-time">12:00</div><div class="tl-content">冲凉 + 午餐 + 下午休息</div></div>
+        </div>
+      </div>
+      <!-- 右：不潜水 -->
+      <div style="border:2px solid #FB923C;border-radius:12px;padding:12px 14px;background:#FFF7ED;">
+        <p style="font-size:12.5px;font-weight:800;color:#C2410C;margin:0 0 8px;">🚶 你 · Kawasan 探险 / 镇区观察（二选一）</p>
+        <div class="timeline" style="margin:0;">
+          <div class="tl-item"><div class="tl-time">A线 06:30</div><div class="tl-content">通过酒店订 LGU 认证向导接送，前往 Badian；核对头盔、救生衣、水鞋和天气取消政策</div></div>
+          <div class="tl-item"><div class="tl-time">A线 08:00</div><div class="tl-content"><strong>Kawasan 峡谷 3-5h</strong>：所有跳台都可放弃；不会游或怕高时不要被同团节奏裹挟</div></div>
+          <div class="tl-item"><div class="tl-time">B线 09:00</div><div class="tl-content"><strong>Moalboal Poblacion 慢行</strong>：公共市场、面包店、sari-sari 小店，比较游客区与本地生活区的价格、支付方式和客群</div></div>
+          <div class="tl-item"><div class="tl-time">B线 12:00</div><div class="tl-content">在本地餐馆吃午饭；征得同意后，与店主/员工聊旺淡季、进货渠道和线上获客</div></div>
+          <div class="tl-item"><div class="tl-time">17:00</div><div class="tl-content">回 Panagsama 与小伙伴汇合 Happy Hour；A、B 两线当天只选一条，不再叠加瀑布或远途景点</div></div>
+        </div>
+        <div style="margin-top:10px;"><img src="images/day3/real/kawasan_falls.jpg" alt="Kawasan 峡谷" style="width:100%;border-radius:8px;display:block;border:1px solid #FDBA74;"></div>
+        <p style="font-size:10.5px;color:#9A3412;margin:6px 0 0;">⚠️ 10/1 国庆人多；雨季有封谷风险 → 行前一天查 "Breathtaking Badian" 官方 FB；经潜店订 LGU 认证向导（₱1,500 统价含向导装备午餐）。</p>
+      </div>
+    </div>
+
+    <!-- ===== Day 5 ===== -->
+    <div style="font-size:13px;font-weight:800;color:#0F172A;margin:0 0 8px;">Day 5 &nbsp;|&nbsp; 10月02日（周五）— 收官 + 备转场（小伙伴可能不潜水）</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:16px;">
+      <!-- 左：潜水 -->
+      <div style="border:2px solid #38BDF8;border-radius:12px;padding:12px 14px;background:#F0F9FF;">
+        <p style="font-size:12.5px;font-weight:800;color:#0369A1;margin:0 0 8px;">🤿 小伙伴 · 方案 A：确认后再加 2 潜</p>
+        <div class="timeline" style="margin:0;">
+          <div class="tl-item"><div class="tl-time">最晚 08:00</div><div class="tl-content">根据体力、耳压和潜店取消规则决定是否潜水；不要因为已到潜店就勉强下水</div></div>
+          <div class="tl-item"><div class="tl-time">08:30</div><div class="tl-content"><strong>Dive 5 Kasai Wall / Tongo</strong>：峭壁 + 微距（裸鳃/豆娘海马）</div></div>
+          <div class="tl-item"><div class="tl-time">10:30</div><div class="tl-content"><strong>Dive 6 二选一</strong>：Airplane Wreck（需 AOW）或 House Reef 夜潜（18:00）</div></div>
+          <div class="tl-item"><div class="tl-time">下午</div><div class="tl-content">归还装备 + 确认无误，准备明天转场</div></div>
+        </div>
+      </div>
+      <!-- 右：不潜水 -->
+      <div style="border:2px solid #FB923C;border-radius:12px;padding:12px 14px;background:#FFF7ED;">
+        <p style="font-size:12.5px;font-weight:800;color:#C2410C;margin:0 0 8px;">🚶 方案 B：你 + 可能不潜水的小伙伴共同陆地线</p>
+        <div class="timeline" style="margin:0;">
+          <div class="tl-item"><div class="tl-time">08:00</div><div class="tl-content">自然醒 + 早餐；整理前两天价格、客群和经营问题记录，挑 1 个假设继续验证</div></div>
+          <div class="tl-item"><div class="tl-time">09:30</div><div class="tl-content">回 Poblacion/周边生活区，体验本地交通和市场；购买小额商品后再礼貌交流</div></div>
+          <div class="tl-item"><div class="tl-time">11:30</div><div class="tl-content">在 Panagsama 一起吃本地午餐；若小伙伴最终潜水，就在潜店结束后汇合</div></div>
+          <div class="tl-item"><div class="tl-time">13:30</div><div class="tl-content">休息、洗衣、收行李；确认 D6 去奥斯洛布的车辆/巴士和接送点</div></div>
+          <div class="tl-item"><div class="tl-time">16:00</div><div class="tl-content"><strong>可选：</strong>海岸散步或咖啡店整理“事实 / 对方观点 / 我的推测”，不要把推测写成当地结论</div></div>
+        </div>
+        <div style="margin-top:10px;"><img src="images/day3/real/osmena_peak.jpg" alt="Osmeña Peak" style="width:100%;border-radius:8px;display:block;border:1px solid #FDBA74;"></div>
+        <p style="font-size:10.5px;color:#9A3412;margin:6px 0 0;">Osmeña Peak 日出仅作为体力型备选：需 03:00 起床并提前订可靠司机；若执行，就取消当天市场走访，下午必须补觉。</p>
+      </div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:12px;">
+      <strong>💼 墨宝访谈卡（每次只聊 10 分钟）：</strong>① 客人主要来自哪里？② 旺季和淡季差别最大是什么？③ 新客主要靠 Google、Booking、Facebook 还是熟人？④ 最难控制的成本是什么？⑤ 如果明年只能改善一件事，会选什么？先说明自己只是来学习的旅行者，先消费、先征得同意，不要求对方透露精确营业额。
+    </div>
+
+    <!-- Day 5 特别说明（共享） -->
+    <div style="background:#FFF7ED;border:1px solid #FDBA74;border-radius:12px;padding:14px 18px;margin-top:12px;">
+      <p style="font-size:12.5px;font-weight:800;color:#C2410C;margin:0 0 8px;">📌 Day 5（10/02）收尾 · 衔接 D6 奥斯洛布</p>
+      <ul style="font-size:11.5px;line-height:1.75;margin:0;padding-left:18px;color:#431407;">
+        <li><strong>小伙伴 Day 5 可能不潜水：</strong>默认先保留“两人共同陆地线”；最迟 D4 晚上向潜店确认是否加入 D5 两潜以及取消/改价规则</li>
+        <li>墨宝<strong>最后一个完整活动日</strong>，D6 一早出发去奥斯洛布（约 1.5-2h 巴士/包车）——两人都记得在 D5 下午前收拾好行李</li>
+        <li>小伙伴若选<strong>夜潜</strong>，当天改为：上午 1 潜 → 午餐 → 休息/打包 → 17:30 夜潜 Briefing → 18:00-19:00 夜潜</li>
+        <li>你默认走<strong>慢节奏市场与经营观察线</strong>；只有非常想看日出且天气稳定时才改走 Osmeña Peak，二者不要叠加</li>
+        <li>若两人都<strong>无 AOW 证</strong>，Airplane Wreck 去不了，小伙伴 Dive 6 改二次 Kasai 或加一次 Sardine Run</li>
+        <li>D5 晚上把 D6 交通安排好，可请酒店前台叫车或查 Ceres 巴士时刻</li>
+      </ul>
+    </div>
+
+    <!-- 潜水安全提示（小伙伴） -->
+    <div class="callout callout-warn" style="margin-top:12px;">
+      <strong>🤿 小伙伴潜水安全核心规则（墨宝适用）：</strong><br>
+      ① <strong>永远跟住潜导</strong>——Pescador 有下降流，独自离队极危险 | ② <strong>严格控深度和时间</strong> | ③ <strong>水面休息 ≥1h</strong>——两潜间必须排氮 | ④ <strong>潜后 24h 不坐飞机/高山</strong>（你们 D6 坐巴士无此问题）| ⑤ <strong>不涂防晒霜下水</strong>——用 rash guard 代替 | ⑥ <strong>不触碰海洋生物</strong> | ⑦ <strong>多喝水少喝酒</strong>
+    </div>
+    <div class="callout callout-info" style="margin-top:8px;">
+      <strong>💡 墨宝 vs 奥斯洛布鲸鲨的伦理区别：</strong>墨宝的沙丁鱼和海龟是<strong>野生自由生活</strong>、无投喂；奥斯洛布鲸鲨互动存在争议（投喂改变自然行为）。作为负责任旅行者，在奥斯洛布<strong>不触碰鲸鲨、不用闪光灯</strong>。
+    </div>
+
+    <!-- 双人费用框 -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px;">
+      <div class="cost-box" style="margin:0;">
+        <div class="cost-title">💰 小伙伴 · 墨宝潜水（D5 待确认）</div>
+        <span class="cost-item"><strong>D3–4 的 4 潜先向潜店询定制价；若 D5 也潜，6 潜套餐参考 ₱7,200 ≈ ¥783</strong></span>
+        <span class="cost-item">潜导小费：≈ ₱600-1,200 ≈ ¥65-130</span>
+        <span class="cost-item">🏨 住宿（Neptune 3晚，2人一间）：两人合计 ≈ ₱6,750 / ¥734，每人平摊约 ¥367</span>
+        <span class="cost-item">餐饮（3天×3餐）：≈ ₱4,500-5,400 ≈ ¥489-587</span>
+        <span class="cost-item" style="background:#FEF3C7;color:#A16207;"><strong>潜水者墨宝段：原 ¥1,700-1,900 是 6 潜情景；D5 不潜时以 4 潜正式报价重算</strong></span>
+      </div>
+      <div class="cost-box" style="margin:0;background:#FFF7ED;border-color:#FDBA74;">
+        <div class="cost-title">💰 你 · 不潜水 3 天（每人）</div>
+        <span class="cost-item"><strong>不购买潜水项目；与伙伴的费用差按其最终 4 潜或 6 潜报价计算</strong></span>
+        <span class="cost-item">向导陪同沙丁鱼浮潜：参考 ₱200-500 ≈ ¥22-54（先问是否含装备）</span>
+        <span class="cost-item">Kawasan 峡谷（含向导装备午餐）：参考 ₱1,500 ≈ ¥163</span>
+        <span class="cost-item">Osmeña Peak 仅作备选：门票+向导参考 ₱200-300 ≈ ¥22-33，另计车辆</span>
+        <span class="cost-item">White Beach 交通/小额消费：估算 ₱300-700 ≈ ¥33-76</span>
+        <span class="cost-item" style="background:#FFEDD5;color:#C2410C;"><strong>不潜水活动费：约 ¥250-450（按二选一活动 + 交流消费）</strong></span>
+      </div>
+    </div>
+
+    <div class="info-row" style="margin-top:14px;"><div class="dot dot-green"></div><div class="label">住宿</div><div class="content"><strong>Neptune Diving Resort</strong>（Panagsama Beach，两人同住第 2-4 晚）— Deluxe Double/Twin Room ₱2,250/晚，含空调 + 早餐 + WiFi</div></div>
+    <div class="info-row"><div class="dot dot-blue"></div><div class="label">交通</div><div class="content">你：tricycle/包车往返 White Beach、Kawasan 与镇区；小伙伴：岸潜步行 + Pescador 船程 10-15min。无合规摩托驾照与保险时不自驾。</div></div>
+  </div>
+</div>
+
+<!-- Day 6 -->
+<div class="day-card" id="day-6">
+  <div class="day-header">
+    <div class="day-num">Day 6 &nbsp;|&nbsp; 10月03日（周六）</div>
+    <div class="day-badge badge-transit">移动日 · 墨宝 → 奥斯洛布 陆路约 2.5h</div>
+  </div>
+  <div class="day-body">
+    <div class="route-line">
+      墨宝 Panagsama <span class="arrow">→</span> 经 Barili / Bato <span class="arrow">→</span> 奥斯洛布 Oslob（Tan-awan 鲸鲨点）
+    </div>
+
+    <!-- 交通详情 -->
+    <div style="background:#F0F7FA;border:1px solid var(--ocean-light);border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <p style="font-size:13px;font-weight:700;color:var(--ocean);margin-bottom:10px;">🚌 墨宝 → 奥斯洛布 交通详情</p>
+      <table style="width:100%;font-size:12.5px;border-collapse:collapse;">
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;width:96px;"><strong>方案 A 巴士</strong></td><td style="border-bottom:1px solid #E0E4E8;">在 Panagsama 路口拦 <strong>Ceres 黄色巴士（Bato / Oslob 方向）</strong>，约 2–2.5h，票价 ≈80–120 PHP/人；在 <strong>Oslob / Tan-awan</strong> 下车。慢但便宜，沿途看乡镇风景。</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>方案 B 包车</strong></td><td style="border-bottom:1px solid #E0E4E8;">两人包一辆 van / 找潜店拼车，约 1.5–2h，摊下来 ≈800–1200 PHP/车。省时、行李不用搬来搬去，<strong>推荐两人出行用</strong>。</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>路况</strong></td><td style="border-bottom:1px solid #E0E4E8;">沿海山路 + 乡镇穿行，晕车备药；途经 <strong>Bato</strong> 是去 Siquijor 的渡轮码头所在地（D8 会用到）。</td></tr>
+        <tr><td style="padding:5px 8px;"><strong>到后</strong></td><td>入住 Tan-awan 或 Oslob 镇酒店 → 下午可先去 <strong>Tumalog Falls</strong> 或海边踩点，为 D7 鲸鲨养精蓄锐。</td></tr>
+      </table>
+    </div>
+
+    <!-- 住宿怎么选 -->
+    <div style="background:#FFF8F0;border:1px solid #F0D9B5;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
+      <p style="font-size:13.5px;font-weight:800;color:#B26A00;margin-bottom:4px;">🏨 住宿怎么选（奥斯洛布住哪，决定 D7 看鲸鲨顺不顺）</p>
+      <p style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.6;">
+        <strong>核心逻辑：</strong>鲸鲨观览点 <strong>Tan-awan</strong> 在 Oslob 镇以北约 10km。想赶 <strong>第一批 6:00 船</strong>，住 <strong>Tan-awan 海边</strong> 最省心（下楼即码头）；住 Oslob 镇则要多 15–20min 车程。D6 只是中转过夜，<strong>预算友好 + 干净</strong> 即可。
+      </p>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;">
+        <tr style="background:#FBE9CC;font-weight:700;color:#7a4a00;">
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">推荐</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">酒店</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">价格/晚</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">位置</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">为什么适合你们</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>⭐首选</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Oslob%20Cebu%20hotels" target="_blank" style="color:#B26A00;text-decoration:none;">Tan-awan 区域住宿建议 ↗</a></strong><br><small style="color:#999;">需自行选择具体酒店</small></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈$25–35<br>≈180–250 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">紧挨鲸鲨码头</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">步行到观鲸点，D7 可直接睡到 5:30 起床；多为家庭经营，可顺带聊本地旅游生意（商业观察切入点）。</td>
+        </tr>
+        <tr style="background:#FFFBF5;">
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>舒适升级</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Oslob%20Cebu%20resort" target="_blank" style="color:#B26A00;text-decoration:none;">Oslob 区域度假村建议 ↗</a></strong><br><small style="color:#999;">需自行选择具体酒店</small></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈$40–60<br>≈290–430 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">带泳池 / 花园</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">想落地泡泳池放松两天选它；多数有接送码头服务。</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>Sumilon 跳岛</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Sumilon%20Island%20Cebu" target="_blank" style="color:#B26A00;text-decoration:none;">Sumilon 岛度假村 ↗</a></strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈$120+<br>高端</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">私人白沙岛</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">蓝水沙洲 + 绝美沙滩；D7 看完鲸鲨可顺去。预算高、想体验"菲律宾海岛度假天花板"的选它。</td>
+        </tr>
+      </table>
+      <p style="font-size:11.5px;color:#999;margin-top:10px;">💡 价格随季节浮动，以 Booking/Agoda 实时为准；建议订 <strong>可免费取消</strong> 房型。</p>
+    </div>
+
+    <!-- 视觉指引 -->
+    <div style="background:#F7FAFC;border:1px solid #D9E4EC;border-radius:14px;padding:18px;margin-bottom:16px;">
+      <p style="font-size:14px;font-weight:800;color:#0E7CAD;margin-bottom:4px;">🗺️ Day 6 路线 · 实景 · 指引</p>
+      <p style="font-size:11.5px;color:#7a8a96;margin-bottom:14px;">墨宝下撤 → 沿西南海岸南下 → 奥斯洛布，一图看懂空间关系（实景照片为维基共享资源真实授权图）</p>
+
+      <p style="font-size:12.5px;font-weight:700;color:#1E7A45;margin:0 0 6px;">① 路线示意（宿务岛南段）</p>
+      <svg viewBox="0 0 680 170" width="100%" style="display:block;background:#EAF4FA;border-radius:10px;">
+        <defs><marker id="ah6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,3 L0,6 Z" fill="#444"/></marker></defs>
+        <rect x="20" y="20" width="170" height="130" rx="14" fill="#DCEFE0" stroke="#7FB89A" stroke-width="2"/>
+        <text x="105" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#2E7D4F">墨宝 Moalboal</text>
+        <text x="105" y="82" text-anchor="middle" font-size="11" fill="#444">Panagsama Beach</text>
+        <text x="105" y="104" text-anchor="middle" font-size="11" fill="#444">↓ 今日下撤</text>
+        <path d="M195,85 L235,85" stroke="#444" stroke-width="2" marker-end="url(#ah6)"/>
+        <rect x="240" y="20" width="200" height="130" rx="14" fill="#FDEFD8" stroke="#E0B873" stroke-width="2"/>
+        <text x="340" y="56" text-anchor="middle" font-size="12.5" font-weight="700" fill="#B26A00">沿西南海岸南下</text>
+        <text x="340" y="80" text-anchor="middle" font-size="11" fill="#333">经 Barili · Bato 码头</text>
+        <text x="340" y="102" text-anchor="middle" font-size="11" fill="#333">乡镇 · sari-sari 店 · 海岸线</text>
+        <text x="340" y="124" text-anchor="middle" font-size="10.5" fill="#888">陆路约 2–2.5h</text>
+        <path d="M445,85 L485,85" stroke="#444" stroke-width="2" marker-end="url(#ah6)"/>
+        <rect x="490" y="20" width="175" height="130" rx="14" fill="#FCEBE0" stroke="#E0962A" stroke-width="2"/>
+        <text x="577" y="60" text-anchor="middle" font-size="13" font-weight="700" fill="#B26A00">奥斯洛布 Oslob</text>
+        <text x="577" y="82" text-anchor="middle" font-size="11" fill="#333">Tan-awan 鲸鲨点</text>
+        <text x="577" y="104" text-anchor="middle" font-size="11" fill="#333">⬅ D7 看鲸鲨</text>
+      </svg>
+
+      <p style="font-size:12.5px;font-weight:700;color:#1E7A45;margin:16px 0 6px;">② 真实场景参考（实景照片 · 来源 Wikimedia Commons，CC 授权）</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        <figure style="margin:0;"><img src="images/day6/real/oslob_town.jpg" alt="奥斯洛布镇" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏘️ 奥斯洛布镇（真实照片 · Wikimedia Commons）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day6/real/sumilon_island.jpg" alt="苏米龙岛" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏝️ Sumilon 岛白沙洲（真实照片 · Wikimedia Commons）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day6/real/tumalog_falls.jpg" alt="Tumalog 瀑布" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">💦 Tumalog Falls（真实照片 · Wikimedia Commons）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day6/real/whale_shark.jpg" alt="鲸鲨" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🐋 鲸鲨（D7 主角 · 真实照片 · Wikimedia Commons）</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-time">08:00 - 08:30</div><div class="tl-content">🍳 墨宝最后早餐（Neptune / Garden Village 餐厅），收拾行李 → 退房</div></div>
+      <div class="tl-item"><div class="tl-time">08:30 - 09:00</div><div class="tl-content">🚐 包车 / 拦 Ceres 巴士出发南下（认准 <strong>Bato / Oslob</strong> 方向，别上错车）</div></div>
+      <div class="tl-item"><div class="tl-time">09:00 - 11:00</div><div class="tl-content">🛣️ 沿海公路南下，途经 Carcar（可顺买 <em>chicharon</em> 炸猪皮）、Barili，看乡镇经济实况</div></div>
+      <div class="tl-item"><div class="tl-time">11:00 - 11:30</div><div class="tl-content">🏨 抵达奥斯洛布 / Tan-awan，办理入住、寄存行李</div></div>
+      <div class="tl-item"><div class="tl-time">11:30 - 13:00</div><div class="tl-content">🍽️ 午餐（镇上 carinderia 本地食堂 / Jollibee），饭后小憩</div></div>
+      <div class="tl-item"><div class="tl-time">13:30 - 16:30</div><div class="tl-content">💦 <strong>Tumalog Falls</strong> 瀑布（离 Tan-awan 约 15min 车程，多层薄纱瀑，可下水）→ 回程顺路看 <strong>Sumilon 观景台</strong> 或海边踩点</div></div>
+      <div class="tl-item"><div class="tl-time">17:00 - 18:00</div><div class="tl-content">🌅 海边散步，确认明日鲸鲨上船点位置（提前踩点省得 D7 摸黑）</div></div>
+      <div class="tl-item"><div class="tl-time">18:30 - 20:00</div><div class="tl-content">🍽️ 晚餐（民宿老板常能安排海鲜简餐）→ <strong>早休息</strong>（D7 要 5:30 起）</div></div>
+    </div>
+
+    <!-- 晚上玩什么 -->
+    <div style="background:#F4FBF6;border:1px solid #BFE3C9;border-radius:12px;padding:14px 18px;margin-top:12px;">
+      <p style="font-size:13px;font-weight:800;color:#1E7A45;margin-bottom:10px;">🎯 Day 6 晚上玩什么（奥斯洛布是小镇，夜晚很安静）</p>
+      <div style="font-size:12px;line-height:1.7;">
+        <p style="margin:0 0 8px;"><strong>① 民宿天台看星（推荐 ⭐）</strong>：南纬小岛光污染少，天气好能看到银河；两人吹海风聊行程，给 D7 蓄力。</p>
+        <p style="margin:0 0 8px;"><strong>② 镇上夜市小吃</strong>：Oslob 主街晚上有零星烧烤摊（<em>ihaw-ihaw</em>），尝试烤香蕉 / 烤鸡翅，便宜接地气。</p>
+        <p style="margin:0 0 8px;"><strong>③ 商业观察夜谈</strong>：入住后先正常消费并询问老板是否方便聊 10 分钟，了解旺淡季、预订渠道和天气取消带来的经营压力；不直接追问精确营业额或私人收入。</p>
+        <p style="margin:0;"><strong>④ 提前预约</strong>：若还没订 D7 鲸鲨 + D8 去 Siquijor 的车船联运，今晚用 Grab / 民宿前台一并敲定。</p>
+      </div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:12px;">
+      💼 <strong>在地商业观察｜乡镇经济：</strong>把 Ceres 巴士、habal-habal、sari-sari 小店和连锁餐饮视为四种不同的基础服务样本。观察客群、公开价格、支付方式与营业时段；若店主愿意聊，再问补货频率和旺淡季变化。不要仅凭一家店推断整个菲律宾下沉市场。
+    </div>
+
+    <div class="cost-box">
+      <div class="cost-title">💰 当日费用</div>
+      <span class="cost-item">🚌 墨宝→奥斯洛布（包车/巴士）：≈150–600 PHP/人</span>
+      <span class="cost-item">🍽️ 午餐 + 晚餐：≈400 PHP × 2人</span>
+      <span class="cost-item">💦 Tumalog Falls 门票/摩托：≈100–200 PHP/人</span>
+      <span class="cost-item">🏨 住宿（1 晚，2人一间）：≈180–250 RMB</span>
+      <span class="cost-item">🍌 夜宵小吃：≈100 PHP</span>
+    </div>
+  </div>
+</div>
+
+<!-- Day 7 -->
+<div class="day-card" id="day-7">
+  <div class="day-header">
+    <div class="day-num">Day 7 &nbsp;|&nbsp; 10月04日（周日）</div>
+    <div class="day-badge badge-activity">🐋 鲸鲨 + 💦 瀑布 重头戏日</div>
+  </div>
+  <div class="day-body">
+    <div class="route-line">
+      🐋 Oslob 鲸鲨观览（Tan-awan）&nbsp;|&nbsp; 💦 Tumalog Falls &nbsp;|&nbsp; 🏝️ Sumilon Island（可选）
+    </div>
+
+    <!-- 鲸鲨详情 -->
+    <div style="background:#FFF8F0;border:1px solid #F0D9B5;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <p style="font-size:13px;font-weight:700;color:#B26A00;margin-bottom:10px;">🐋 Oslob 鲸鲨观览 · 必读（2026 实测）</p>
+      <table style="width:100%;font-size:12.5px;border-collapse:collapse;">
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;width:96px;"><strong>时间</strong></td><td style="border-bottom:1px solid #E0E4E8;"><strong>6:00–12:00</strong>（官方时段，过午停摆）。<strong>最佳 6:00–8:00 第一批</strong>，人少、鲨近、光线好。</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>票价</strong></td><td style="border-bottom:1px solid #E0E4E8;">外国人浮潜观鲨 <strong>≈1,000 PHP/人</strong>；+ 租用浮潜面罩/脚蹼 ≈200–300 PHP；仅观看（不下水）更便宜。</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>流程</strong></td><td style="border-bottom:1px solid #E0E4E8;">登记 → 听简报（禁防晒霜下水、禁触碰、保持距离）→ 分批上小螃蟹船（<em>banca</em>）→ 工作人员投喂吸引鲸鲨，游客在船边浮潜观察约 30min。</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>伦理</strong></td><td style="border-bottom:1px solid #E0E4E8;">⚠️ Oslob 是"每日投喂"模式，动物保护界有争议（改变鲸鲨自然行为）。介意者可选 D3-5 墨宝 <strong>沙丁鱼风暴</strong> 等纯野生体验；或只看不喂。尊重当地社区生计选择即可。</td></tr>
+        <tr><td style="padding:5px 8px;"><strong>装备</strong></td><td>GoPro / 防水袋必备；<strong>物理防晒衣</strong>替代防晒霜（保护珊瑚）。两人可共用一台水下相机。</td></tr>
+      </table>
+    </div>
+
+    <!-- 视觉指引 -->
+    <div style="background:#F7FAFC;border:1px solid #D9E4EC;border-radius:14px;padding:18px;margin-bottom:16px;">
+      <p style="font-size:14px;font-weight:800;color:#0E7CAD;margin-bottom:4px;">🗺️ Day 7 实景 · 指引</p>
+      <p style="font-size:11.5px;color:#7a8a96;margin-bottom:14px;">鲸鲨、瀑布、小岛，一图建立视觉预期（实景照片为维基共享资源真实授权图）</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        <figure style="margin:0;"><img src="images/day6/real/whale_shark.jpg" alt="鲸鲨" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🐋 与鲸鲨共游（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day6/real/tumalog_falls.jpg" alt="Tumalog 瀑布" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">💦 Tumalog 薄纱瀑（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day6/real/sumilon_island.jpg" alt="Sumilon 岛" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏝️ Sumilon 沙洲（真实照片）</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-time">05:30 - 05:50</div><div class="tl-content">⏰ 起床、轻装（泳衣穿好 + 防晒衣），民宿简早或带能量棒</div></div>
+      <div class="tl-item"><div class="tl-time">05:50 - 06:10</div><div class="tl-content">🚶 步行或请民宿安排短途接送到 <strong>Tan-awan 鲸鲨登记处</strong>（住海边民宿通常 5–10min）</div></div>
+      <div class="tl-item"><div class="tl-time">06:10 - 06:40</div><div class="tl-content">📝 登记 + 简报 + 领救生衣/面罩，<strong>第一批上船</strong></div></div>
+      <div class="tl-item"><div class="tl-time">06:40 - 07:30</div><div class="tl-content">🐋 <strong>鲸鲨浮潜 / 船上观察</strong>：按简报要求保持距离，不触碰、不追逐、不使用闪光灯；把投喂模式及其伦理争议也当作这次观察的一部分</div></div>
+      <div class="tl-item"><div class="tl-time">07:30 - 09:00</div><div class="tl-content">🚿 冲淡 + 回民宿补觉 / 正式早餐；或顺去 <strong>Tumalog Falls</strong>（9:00 前人少）</div></div>
+      <div class="tl-item"><div class="tl-time">09:30 - 11:30</div><div class="tl-content">💦 <strong>Tumalog Falls</strong> 玩水（多层薄纱瀑布，可下水）——若上午没去的话</div></div>
+      <div class="tl-item"><div class="tl-time">12:00 - 13:30</div><div class="tl-content">🍽️ 午餐 + 午休（鲸鲨早起耗体力，补一觉）</div></div>
+      <div class="tl-item"><div class="tl-time">14:00 - 17:30</div><div class="tl-content">🏝️ <strong>Sumilon Island 跳岛</strong>（可选）：蓝水沙洲 + 浮潜，船程约 20min。或留在民宿泳池躺平</div></div>
+      <div class="tl-item"><div class="tl-time">18:30 - 20:00</div><div class="tl-content">🍽️ 海鲜晚餐（庆祝"见过世界上最大的鱼"）→ 整理照片 + 预习 D8 渡轮</div></div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:12px;">
+      💼 <strong>在地商业观察｜旅游价值链：</strong>Oslob 鲸鲨项目连接登记、船工、摄影、交通、住宿和小贩，也伴随持续的生态争议。可观察游客从哪里购票、现场有哪些附加消费、规则由谁执行；价值如何分配、社区实际受益多少，需要向不同角色求证，不能由票价直接推断。
+    </div>
+
+    <div class="note-box">
+      ⚠️ 鲸鲨最佳观赏时间为清晨 6:00-9:00，越早越好。尊重海洋生物，<strong>禁止涂抹防晒霜下水</strong>（用防晒衣）。水下不要追逐、触碰鲸鲨。
+    </div>
+
+    <div class="cost-box">
+      <div class="cost-title">💰 当日费用</div>
+      <span class="cost-item"><strong>🐋 鲸鲨浮潜：≈1,000 PHP/人</strong></span>
+      <span class="cost-item">🤿 浮潜装备租：≈200–300 PHP/人</span>
+      <span class="cost-item">💦 Tumalog Falls：≈100–200 PHP/人</span>
+      <span class="cost-item">🏝️ Sumilon 跳岛（可选）：≈1,500–2,500 PHP/船</span>
+      <span class="cost-item">🍽️ 午/晚餐：≈400 PHP × 2人</span>
+      <span class="cost-item">🏨 住宿（连住第 2 晚）：≈180–250 RMB</span>
+    </div>
+  </div>
+</div>
+
+<!-- Day 8 -->
+<div class="day-card" id="day-8">
+  <div class="day-header">
+    <div class="day-num">Day 8 &nbsp;|&nbsp; 10月05日（周一）</div>
+    <div class="day-badge badge-transit">🚢 渡轮日 · 奥斯洛布 → 锡基霍尔</div>
+  </div>
+  <div class="day-body">
+    <div class="route-line">
+      奥斯洛布 Oslob <span class="arrow">→</span> Liloan/Santander 码头 <span class="arrow">→</span> Sibulan（内格罗斯） <span class="arrow">→</span> Dumaguete <span class="arrow">→</span> 锡基霍尔 Siquijor
+    </div>
+
+    <!-- 渡轮详情 -->
+    <div style="background:#F0F7FA;border:1px solid var(--ocean-light);border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <p style="font-size:13px;font-weight:700;color:var(--ocean);margin-bottom:10px;">🚢 奥斯洛布 → 锡基霍尔 渡轮详情</p>
+      <table style="width:100%;font-size:12.5px;border-collapse:collapse;">
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;width:96px;"><strong>路线</strong></td><td style="border-bottom:1px solid #E0E4E8;">从 Oslob 南行到 <strong>Liloan Port（Santander）</strong>（约 30–45min），搭 <strong>Maayo Shipping 渡轮</strong> 到 <strong>Sibulan Port</strong>，转 tricycle 到 <strong>Dumaguete 港</strong>，再换已出票的快船到 <strong>Siquijor Port</strong>，最后乘酒店接送或带司机车辆去 San Juan。船班和港口入口按运营方当天通知确认。</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>直达方案</strong></td><td style="border-bottom:1px solid #E0E4E8;">⚠️ 注意：宿务南端<strong>没有</strong>直达锡基霍尔的快艇。冷门直达仅有 <em>Maayo Shipping RORO 慢船</em>（Bato/Liloan → <strong>Larena 港</strong>），约 3h，₱275，<strong>每周仅几天、多凌晨发船</strong>，班次不稳、不建议依赖。（原攻略误写的"08:20 / 14:30 发船"是锡基霍尔→薄荷的船，非本段。）</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>联运</strong></td><td style="border-bottom:1px solid #E0E4E8;">也可在 Oslob 报"车 + 船联运"一日通，司机送你到码头、含船票，省心但贵 30–50%。</td></tr>
+        <tr><td style="padding:5px 8px;"><strong>到后</strong></td><td>抵达 Siquijor，入住 San Juan（连住 3 晚：10/5、10/6、10/7）。优先请民宿安排码头接送和次日司机；自驾仅在证件与保险合规时选择。</td></tr>
+      </table>
+    </div>
+
+    <!-- 住宿怎么选 -->
+    <div style="background:#FFF8F0;border:1px solid #F0D9B5;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
+      <p style="font-size:13.5px;font-weight:800;color:#B26A00;margin-bottom:4px;">🏨 锡基霍尔住宿怎么选（连住 3 晚，重在环岛方便）</p>
+      <p style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.6;">
+        <strong>核心逻辑：</strong>住 <strong>San Juan（西北海岸）</strong> 最方便——沙滩、潜店、餐厅和日落集中在这侧。环岛优先选择<strong>带司机的 tricycle / 小车</strong>，能聊天、少看导航也更安全；若确认证件、摩托车型权限和保险均有效，再考虑自驾。
+      </p>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;">
+        <tr style="background:#FBE9CC;font-weight:700;color:#7a4a00;">
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">推荐</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">酒店</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">价格/晚</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">位置</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">为什么适合你们</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>⭐首选</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=San%20Juan%20Siquijor%20hotels" target="_blank" style="color:#B26A00;text-decoration:none;">San Juan 海边民宿 ↗</a></strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈$20–30<br>≈145–215 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">Paliton/Sandugan 沙滩</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">下楼即白沙日落沙滩，餐厅潜店步行可达，两人骑行环岛基地。预算友好、氛围松弛。</td>
+        </tr>
+        <tr style="background:#FFFBF5;">
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>设计感</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Siquijor%20resort" target="_blank" style="color:#B26A00;text-decoration:none;">雨林/泳池度假村 ↗</a></strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈$40–70<br>≈290–500 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">带泳池花园</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">想泡泳池、丛林感的两人选；多数含接送码头。</td>
+        </tr>
+      </table>
+      <p style="font-size:11.5px;color:#999;margin-top:10px;">💡 价格随季节浮动；连住 3 晚建议订 <strong>可免费取消</strong> 房型。下岛后先确认酒店接送/次日司机并准备现金（岛上 ATM 较少）。</p>
+    </div>
+
+    <!-- 视觉指引 -->
+    <div style="background:#F7FAFC;border:1px solid #D9E4EC;border-radius:14px;padding:18px;margin-bottom:16px;">
+      <p style="font-size:14px;font-weight:800;color:#0E7CAD;margin-bottom:4px;">🗺️ Day 8 路线 · 实景</p>
+      <p style="font-size:11.5px;color:#7a8a96;margin-bottom:14px;">南端渡轮跨海 → 神秘之岛 Siquijor（实景照片为维基共享资源真实授权图）</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        <figure style="margin:0;"><img src="images/day8/real/siquijor_island.jpg" alt="锡基霍尔岛" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏝️ 锡基霍尔岛（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day8/real/balete_tree.jpg" alt="千年榕树" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🌳 千年 Balete 树鱼疗（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day8/real/cambugahay_falls.jpg" alt="Cambugahay 瀑布" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">💦 Cambugahay Falls（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day8/real/salagdoong_beach.jpg" alt="Salagdoong 海滩" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏖️ Salagdoong 跳崖海滩（真实照片）</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-time">07:00 - 08:00</div><div class="tl-content">🍳 奥斯洛布早餐 → 退房，司机送 / 自驾到 <strong>Liloan Port（Santander）</strong>（约 30–45min）</div></div>
+      <div class="tl-item"><div class="tl-time">08:00 - 09:30</div><div class="tl-content">🚢 乘当日确认的 Liloan → <strong>Sibulan Port</strong> 船班；抵达后转 tricycle 去 <strong>Dumaguete 港</strong></div></div>
+      <div class="tl-item"><div class="tl-time">09:30 - 12:30</div><div class="tl-content">在 Dumaguete 港办理已出票的 OceanJet / Montenegro 班次，前往 <strong>Siquijor Port</strong>，再转 San Juan。两段船不要按理想时间硬拼，陆路转港至少预留 60–90 分钟</div></div>
+      <div class="tl-item"><div class="tl-time">12:30 - 14:00</div><div class="tl-content">🛵 下船后使用酒店接送/有司机的交通前往 San Juan，办理入住并吃午餐；自驾摩托仅限持合规驾照、熟悉左舵右行和岛上路况者</div></div>
+      <div class="tl-item"><div class="tl-time">15:00 - 17:00</div><div class="tl-content">🏍️ <strong>轻量初探</strong>：只选 Balete Tree 或附近海岸一处，不在转船日硬塞 Cambugahay Falls；若船班晚点则直接取消</div></div>
+      <div class="tl-item"><div class="tl-time">17:30 - 19:00</div><div class="tl-content">🌅 Paliton Beach 日落（小岛最治愈时刻）→ 回酒店冲凉</div></div>
+      <div class="tl-item"><div class="tl-time">19:30 - 21:00</div><div class="tl-content">🍽️ 海滩餐厅晚餐（烤海鲜 + 冰啤酒），<strong>早休息</strong>（岛上夜生活=星空）</div></div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:12px;">
+      💼 <strong>在地商业观察｜岛际物流假设：</strong>跨岛运输可能影响小岛库存、价格和服务稳定性，但先记录事实：同类商品与宿务价差多大、缺货是否常见、商家多久补货、物流还是客流更困扰经营者。只有得到多个样本后，再判断供应链或文旅工具是否真有机会。
+    </div>
+    <div class="callout callout-warn" style="margin-top:8px;">
+      <strong>船班不是常量：</strong>运营方通常按月/阶段更新时刻，出发前 7 天再次核对并出票，前 24–48 小时结合海况复查。若任一段取消，以“安全抵达锡基霍尔”为当天唯一目标，不再安排环岛景点。
+    </div>
+
+    <div class="cost-box">
+      <div class="cost-title">💰 当日费用</div>
+      <span class="cost-item">🚢 渡轮船票：Liloan→Sibulan ₱130–200 + Dumaguete→Siquijor ₱455–754 ≈ 600–950 PHP/人</span>
+      <span class="cost-item">🛵 自驾摩托参考：≈300–400 PHP/天；带司机/包车价格另询，差额从机动金支出</span>
+      <span class="cost-item">🍽️ 午/晚餐：≈400 PHP × 2人</span>
+      <span class="cost-item">💦 Cambugahay 门票/秋千：≈50–100 PHP/人</span>
+      <span class="cost-item">🏨 住宿（第 1 晚）：≈145–215 RMB</span>
+    </div>
+  </div>
+</div>
+
+<!-- Day 9 -->
+<div class="day-card" id="day-9">
+  <div class="day-header">
+    <div class="day-num">Day 9 &nbsp;|&nbsp; 10月06日（周二）</div>
+    <div class="day-badge badge-sight">🏍️ 锡基霍尔环岛深度游</div>
+  </div>
+  <div class="day-body">
+    <div class="route-line">
+      🏍️ 锡基霍尔 Siquijor 环岛 &nbsp;|&nbsp; 瀑布 · 沙滩 · 巫术文化 · 灯塔
+    </div>
+    <p style="font-size:13.5px;color:var(--text-secondary);margin-bottom:12px;">
+      锡基霍尔被称为"神秘之岛"，以 folklore（<em>bolo-bolo</em> 疗愈）、自然环境与慢生活闻名。今天用带司机的 tricycle / 小车走主要点位，边走边理解当地生活；若证件和保险都合规才自驾摩托。山路弯道多，<strong>天黑前结束远途移动</strong>。
+    </p>
+
+    <!-- 视觉指引 -->
+    <div style="background:#F7FAFC;border:1px solid #D9E4EC;border-radius:14px;padding:18px;margin-bottom:16px;">
+      <p style="font-size:14px;font-weight:800;color:#0E7CAD;margin-bottom:4px;">🗺️ Day 9 环岛路线 · 实景</p>
+      <p style="font-size:11.5px;color:#7a8a96;margin-bottom:14px;">San Juan → 北端灯塔 → 东岸 Salagdoong → 南 Cambugahay → 回（实景照片为维基共享资源真实授权图）</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        <figure style="margin:0;"><img src="images/day8/real/cambugahay_falls.jpg" alt="Cambugahay" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">💦 Cambugahay 秋千跳水（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day8/real/salagdoong_beach.jpg" alt="Salagdoong" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏖️ Salagdoong 跳崖（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day8/real/balete_tree.jpg" alt="Balete" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🌳 Balete 树鱼疗（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day8/real/siquijor_island.jpg" alt="岛景" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏝️ 全岛绿意（真实照片）</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-time">08:00 - 08:30</div><div class="tl-content">🍳 早餐后与预约司机会合，确认路线、费用、返程时间；若合规自驾则检查车辆、油量与两顶头盔</div></div>
+      <div class="tl-item"><div class="tl-time">08:30 - 10:00</div><div class="tl-content">🌳 <strong>Old Enchanted Balete Tree</strong>（千年榕树，脚下鱼疗池）+ 附近 <strong>Cambugahay Falls</strong> 第一波（人少，先玩秋千跳水）</div></div>
+      <div class="tl-item"><div class="tl-time">10:00 - 12:00</div><div class="tl-content">🏖️ 东岸 <strong>Salagdoong Beach</strong>——悬崖跳水（3m/7m/10m 跳台）+ 浮潜，海水通透见底</div></div>
+      <div class="tl-item"><div class="tl-time">12:00 - 13:30</div><div class="tl-content">🍽️ 海边简餐（岛上 carinderia 或自带干粮）→ 午休</div></div>
+      <div class="tl-item"><div class="tl-time">13:30 - 15:30</div><div class="tl-content">💧 <strong>Lugnason Falls</strong> / <strong>Kagusuan Beach</strong>（隐秘蓝绿池 + 礁石滩）；顺路看 <strong>Capilay Spring Park</strong></div></div>
+      <div class="tl-item"><div class="tl-time">15:30 - 17:00</div><div class="tl-content">🕯️ <strong>信仰与民俗交流（可选）</strong>：仅通过民宿/社区向导提前引荐，并得到 healer 本人明确同意后拜访；先问文化意义，支付约定费用，未经许可不拍摄、不录音。没有正式引荐就改去海岸或小镇咖啡店</div></div>
+      <div class="tl-item"><div class="tl-time">17:00 - 18:30</div><div class="tl-content">🌅 <strong>Paliton Beach / 北端灯塔</strong> 日落——岛上最美黄昏</div></div>
+      <div class="tl-item"><div class="tl-time">19:30 - 21:00</div><div class="tl-content">🍽️ 海鲜晚餐 → 整理“市场观察笔记”（岛上生意样本：民宿定价、交通服务、向导费）</div></div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:12px;">
+      💼 <strong>在地商业观察｜目的地叙事：</strong>记录“神秘之岛”叙事分别由游客、向导、民宿和居民怎样讲述；在 Cambugahay Falls 观察门票、向导、秋千和摄影等服务如何组合。不要把当地信仰只当作营销 IP，交流时优先问文化意义，再讨论旅游传播。
+    </div>
+
+    <div class="note-box">
+      💡 环岛路弯道多、部分路段无路灯，带司机的车辆也应<strong>天黑前结束远途移动</strong>。跳崖量力而行，先从小台试。
+    </div>
+
+    <div class="cost-box">
+      <div class="cost-title">💰 当日费用</div>
+      <span class="cost-item">🚐 带司机环岛交通：价格以民宿/司机当日报价为准；自驾参考 ≈300–400 PHP/天</span>
+      <span class="cost-item">💦 各瀑布/沙滩门票：≈100–200 PHP/人</span>
+      <span class="cost-item">🍽️ 午/晚餐：≈400 PHP × 2人</span>
+      <span class="cost-item">🕯️ 民俗交流（仅预约且本人同意）：费用提前谈妥，参考 ≈200 PHP 起</span>
+      <span class="cost-item">🏨 住宿（第 2 晚）：≈145–215 RMB</span>
+      <span class="cost-item" style="background:#FDF2F8;color:#BE185D;">💆 环岛移动后若疲劳，可在 San Juan 找评价稳定的按摩店（参考 ≈200–300 PHP）；完整 SPA 留到 D10 白天更从容</span>
+    </div>
+  </div>
+</div>
+
+<!-- Day 10 -->
+<div class="day-card" id="day-10">
+  <div class="day-header">
+    <div class="day-num">Day 10 &nbsp;|&nbsp; 10月07日（周三）</div>
+    <div class="day-badge badge-dive">🤿 小伙伴潜水 + 🚶 你在地探索</div>
+  </div>
+  <div class="day-body">
+    <div class="route-line">
+      🤿 Siquijor 潜水（Tubod 保护区）&nbsp;|&nbsp; 🚶 你不潜水：岛民生活 / 小店经营 / SPA
+    </div>
+
+    <!-- 双轨 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+      <div style="background:#EAF2FB;border:1px solid #Bcd4ee;border-radius:12px;padding:14px 16px;">
+        <p style="font-size:13px;font-weight:800;color:#0E7CAD;margin:0 0 8px;">🤿 小伙伴 · 潜水线（Ustory Divers / Three Dives）</p>
+        <div style="font-size:12px;line-height:1.7;">
+          <p style="margin:0 0 6px;"><strong>📍 Tubod Fish Sanctuary</strong>：家门口礁区，海龟、软珊瑚、jack 鱼群。</p>
+          <p style="margin:0 0 6px;"><strong>📍 Tubod Wall</strong>：壁潜，看大型鱼群与陡降地形。</p>
+          <p style="margin:0 0 6px;"><strong>📍 Micro Wall</strong>：微距天堂（海兔、虾蟹、瓷蟹）。</p>
+          <p style="margin:0;">💰 Three Dives 套餐约 <strong>564 RMB</strong>；清晨可能偶遇鲸鲨路过！</p>
+        </div>
+      </div>
+      <div style="background:#FFF7ED;border:1px solid #F5D9B0;border-radius:12px;padding:14px 16px;">
+        <p style="font-size:13px;font-weight:800;color:#C2410C;margin:0 0 8px;">🚶 你 · 在地探索线</p>
+        <div style="font-size:12px;line-height:1.7;">
+          <p style="margin:0 0 6px;"><strong>① 生活区慢行</strong>：请民宿安排司机/向导，去 San Juan 生活区、市场或椰子产品小店，不临时闯入私人作坊。</p>
+          <p style="margin:0 0 6px;"><strong>② 岛上经营观察</strong>：只选民宿、司机、小店中的 1–2 位交流，了解船运、旺淡季、现金/电子支付和平台获客。</p>
+          <p style="margin:0 0 6px;"><strong>③ 海边休息</strong>：Paliton / Sandugan 散步、读书；想浮潜必须通过潜店找向导/同伴，不单独下水。</p>
+          <p style="margin:0;"><strong>④ 按摩 SPA（重点）</strong>：下午安排 1.5h Hilot / 精油按摩，给自己留真正放松的半天。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 按摩 SPA 推荐 + 全行程安排 -->
+    <div style="background:#FDF2F8;border:1px solid #F4C7DC;border-radius:14px;padding:16px 18px;margin-bottom:16px;">
+      <p style="font-size:14px;font-weight:800;color:#BE185D;margin:0 0 4px;">💆 按摩 / SPA 推荐 &amp; 哪天做最合适</p>
+      <p style="font-size:11.5px;color:#7a8a96;margin:0 0 12px;">菲律宾按摩分三档：路边 <strong>beach spa / 小店</strong>（便宜）、<strong>度假村 SPA</strong>（环境好）、<strong>传统 Hilot</strong>（草药热敷 + 关节复位，本地人最爱）。男生两人都合适，别害羞。</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;line-height:1.6;">
+        <div style="background:#fff;border:1px solid #F1D4E2;border-radius:10px;padding:10px 12px;">
+          <p style="margin:0 0 4px;font-weight:700;color:#BE185D;">✅ 首选：Day 10（锡基霍尔）</p>
+          <p style="margin:0;color:#555;">岛上 beach spa 最便宜（≈300–500 PHP/小时，≈¥40–65）。潜店伙伴 3 潜时你独占白天，做 1–2 小时 Hilot 或精油按摩，性价比最高、节奏最松。</p>
+        </div>
+        <div style="background:#fff;border:1px solid #F1D4E2;border-radius:10px;padding:10px 12px;">
+          <p style="margin:0 0 4px;font-weight:700;color:#BE185D;">✅ 备选：Day 11（薄荷 Alona）</p>
+          <p style="margin:0;color:#555;">Alona Beach 夜市旁 SPA 店密集（≈500–800 PHP/小时，≈¥65–105）。傍晚做完按摩再吃海鲜，旅游区服务最成熟。</p>
+        </div>
+        <div style="background:#fff;border:1px solid #F1D4E2;border-radius:10px;padding:10px 12px;">
+          <p style="margin:0 0 4px;font-weight:700;color:#BE185D;">🟡 顺路：Day 6 / Day 9</p>
+          <p style="margin:0;color:#555;">D6 奥斯洛布小镇店少（可让酒店安排）；D9 环岛途中若移动后疲劳，可在 San Juan 找评价稳定的按摩店。</p>
+        </div>
+        <div style="background:#fff;border:1px solid #F1D4E2;border-radius:10px;padding:10px 12px;">
+          <p style="margin:0 0 4px;font-weight:700;color:#BE185D;">🚫 不建议</p>
+          <p style="margin:0;color:#555;">D7 鲸鲨早起、D12 陆地转场、D13 城市观察、D14 早班机——这些天不再加按摩，时间碎或体力消耗较大。</p>
+        </div>
+      </div>
+      <p style="font-size:11.5px;color:#888;margin:10px 0 0;">💡 可直接在 <a href="https://www.tripadvisor.com/Attractions-g660450-Siquijor_Island.html" target="_blank" style="color:#BE185D;text-decoration:none;">TripAdvisor 锡基霍尔 SPA 榜单 ↗</a> 看实时口碑；到店前先讲价、确认时长与是否含小费。</p>
+    </div>
+
+    <!-- 视觉指引 -->
+    <div style="background:#F7FAFC;border:1px solid #D9E4EC;border-radius:14px;padding:18px;margin-bottom:16px;">
+      <p style="font-size:14px;font-weight:800;color:#0E7CAD;margin-bottom:4px;">🗺️ Day 10 实景</p>
+      <p style="font-size:11.5px;color:#7a8a96;margin-bottom:14px;">潜点或沙滩，各自精彩（实景照片为维基共享资源真实授权图）</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        <figure style="margin:0;"><img src="images/day8/real/siquijor_island.jpg" alt="锡基霍尔" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏝️ 潜水/浮潜海域（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day8/real/salagdoong_beach.jpg" alt="沙滩" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏖️ 你不潜水的沙滩（真实照片）</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-time">07:30 - 08:00</div><div class="tl-content">🍳 一起早餐；确认午餐汇合点与 17:00 日落汇合点，小伙伴参加潜前简报</div></div>
+      <div class="tl-item"><div class="tl-time">08:00 - 11:30</div><div class="tl-content">🤿 <strong>小伙伴 2 潜</strong>（Tubod 保护区 + Wall）；🚶 <strong>你</strong> 跟预约司机/向导走 San Juan 生活区，体验市场、小店和岛上补货方式</div></div>
+      <div class="tl-item"><div class="tl-time">11:30 - 12:00</div><div class="tl-content">📝 找咖啡店整理观察：哪些是亲眼所见、哪些是当地人观点、哪些仍只是自己的假设</div></div>
+      <div class="tl-item"><div class="tl-time">12:00 - 13:30</div><div class="tl-content">🍽️ 午餐汇合（潜店附近餐厅）→ 小伙伴休息减压</div></div>
+      <div class="tl-item"><div class="tl-time">14:00 - 16:30</div><div class="tl-content">🤿 <strong>小伙伴第 3 潜（Micro Wall 微距）</strong>；🏝️ <strong>你</strong> 回 San Juan 做 <strong>1.5h Hilot / 精油按摩</strong>（参考 ≈450–700 PHP）或海边安静休息</div></div>
+      <div class="tl-item"><div class="tl-time">17:00 - 18:30</div><div class="tl-content">🌅 一起海边日落，小伙伴分享今日 underwater 见闻</div></div>
+      <div class="tl-item"><div class="tl-time">19:30 - 21:00</div><div class="tl-content">🍽️ 欢送式海鲜大餐（今晚是在 Siquijor 最后一晚）→ 收拾行李，预习 D11 渡轮去 Bohol</div></div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:12px;">
+      💼 <strong>在地商业观察｜待验证假设：</strong>潜店可能依赖认证体系、平台口碑和教练能力形成较高客单，但租船、装备折旧、保险、获客佣金和天气取消也可能让成本不低。请分别问潜店与民宿“客人从哪里来、淡季怎么办、最难控制的成本是什么”，不要先下“边际成本低”或“中国供应链一定能赋能”的结论。
+    </div>
+
+    <div class="cost-box">
+      <div class="cost-title">💰 当日费用</div>
+      <span class="cost-item"><strong>🤿 小伙伴 Three Dives：≈564 RMB</strong></span>
+      <span class="cost-item">🚶 你 市内交通 / 咖啡 / SPA：参考 ≈650–1,200 PHP</span>
+      <span class="cost-item">🍽️ 午/晚餐：≈400 PHP × 2人</span>
+      <span class="cost-item">🏨 住宿（第 3 晚，连住结束）：≈145–215 RMB</span>
+    </div>
+  </div>
+</div>
+
+<!-- Day 11 -->
+<div class="day-card" id="day-11">
+  <div class="day-header">
+    <div class="day-num">Day 11 &nbsp;|&nbsp; 10月08日（周四）</div>
+    <div class="day-badge badge-transit">🚢 渡轮日 · 锡基霍尔 → 薄荷 Bohol</div>
+  </div>
+  <div class="day-body">
+    <div class="route-line">
+      锡基霍尔 Siquijor <span class="arrow">→</span> 薄荷 Bohol（Tagbilaran / Panglao）&nbsp;|&nbsp; Alona Beach 落脚
+    </div>
+
+    <!-- 渡轮详情 -->
+    <div style="background:#F0F7FA;border:1px solid var(--ocean-light);border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <p style="font-size:13px;font-weight:700;color:var(--ocean);margin-bottom:10px;">🚢 锡基霍尔 → 薄荷岛 渡轮详情</p>
+      <table style="width:100%;font-size:12.5px;border-collapse:collapse;">
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;width:96px;"><strong>主流线</strong></td><td style="border-bottom:1px solid #E0E4E8;"><strong>Siquijor Port → Tagbilaran（Bohol）</strong>，OceanJet / Lite Shipping，约 2–2.5h，游客票价 ≈1,000–1,200 PHP。</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>班次</strong></td><td style="border-bottom:1px solid #E0E4E8;">每天 1–2 班（多为上午发船），<strong>务必提前 1 天在码头 / 线上买票</strong>，旺季售罄。</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>到后</strong></td><td style="border-bottom:1px solid #E0E4E8;">Tagbilaran 下船 → 拼车 / Grab 到 <strong>Panglao（Alona Beach）</strong> 约 30–45min（车费 ≈300–500 PHP）。</td></tr>
+        <tr><td style="padding:5px 8px;"><strong>住宿</strong></td><td>Bohol / Panglao（10/8 入住 1 晚；D12 傍晚返宿务）。Alona Beach 餐饮 / 潜店 / 夜生活最集中。</td></tr>
+      </table>
+    </div>
+
+    <!-- 住宿怎么选 -->
+    <div style="background:#FFF8F0;border:1px solid #F0D9B5;border-radius:12px;padding:16px 18px;margin-bottom:16px;">
+      <p style="font-size:13.5px;font-weight:800;color:#B26A00;margin-bottom:4px;">🏨 薄荷岛住宿怎么选（Panglao / Alona 最方便）</p>
+      <p style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.6;">
+        <strong>核心逻辑：</strong>Alona Beach 是 Bohol 的"旅游心脏"——餐厅、潜店、按摩、夜市全在这 800m 沙滩上。住 <strong>Alona 步行圈</strong> 最省心；想安静可选 <strong>Dumaluan / 岛南侧</strong>，但要骑车进出。
+      </p>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;">
+        <tr style="background:#FBE9CC;font-weight:700;color:#7a4a00;">
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">推荐</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">酒店</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">价格/晚</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">位置</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;">为什么适合你们</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>⭐首选</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Alona%20Beach%20Panglao%20Bohol" target="_blank" style="color:#B26A00;text-decoration:none;">Alona Beach 民宿 ↗</a></strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈$25–40<br>≈180–290 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">步行到沙滩</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">下楼即 Alona，餐厅潜店按摩全在脚边；两人预算友好，氛围热闹。</td>
+        </tr>
+        <tr style="background:#FFFBF5;">
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong>安静升级</strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;"><strong><a href="https://www.booking.com/searchresults.html?ss=Dumaluan%20Beach%20Bohol" target="_blank" style="color:#B26A00;text-decoration:none;">Dumaluan 侧度假村 ↗</a></strong></td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">≈$50–90<br>≈360–650 RMB</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">南侧安静沙滩</td>
+          <td style="padding:7px 8px;border:1px solid #F0D9B5;vertical-align:top;">沙更白更静，带泳池；需骑车 10min 到 Alona 玩。</td>
+        </tr>
+      </table>
+      <p style="font-size:11.5px;color:#999;margin-top:10px;">💡 价格随季节浮动；本段只住 1 晚，建议订 <strong>可免费取消</strong> 房型。D11 傍晚才到，当天只逛 Alona 夜市即可；D12 晚上回宿务，不在薄荷继续住宿。</p>
+    </div>
+
+    <!-- 视觉指引 -->
+    <div style="background:#F7FAFC;border:1px solid #D9E4EC;border-radius:14px;padding:18px;margin-bottom:16px;">
+      <p style="font-size:14px;font-weight:800;color:#0E7CAD;margin-bottom:4px;">🗺️ Day 11 路线 · 实景</p>
+      <p style="font-size:11.5px;color:#7a8a96;margin-bottom:14px;">跨海北上 → Bohol 度假集群（实景照片为维基共享资源真实授权图）</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        <figure style="margin:0;"><img src="images/day11/real/alona_beach.jpg" alt="Alona 沙滩" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏖️ Alona Beach（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day11/real/chocolate_hills.jpg" alt="巧克力山" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🌄 巧克力山（D12 备选 · 真实照片）</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-time">07:00 - 07:45</div><div class="tl-content">🍳 Siquijor 早餐 → 退房 → 乘酒店接送/预约车辆到 Siquijor Port</div></div>
+      <div class="tl-item"><div class="tl-time">08:00 - 10:30</div><div class="tl-content">🚢 乘渡轮 <strong>Siquijor → Tagbilaran（Bohol）</strong>，约 2–2.5h，海景跨岛</div></div>
+      <div class="tl-item"><div class="tl-time">10:30 - 11:30</div><div class="tl-content">🚐 下船拼车 / Grab 到 Panglao（Alona Beach），入住酒店</div></div>
+      <div class="tl-item"><div class="tl-time">11:30 - 13:00</div><div class="tl-content">🍽️ Alona 海鲜午餐 → 小憩（连续移动日补觉）</div></div>
+      <div class="tl-item"><div class="tl-time">14:00 - 17:00</div><div class="tl-content">🏖️ <strong>Alona Beach 半日</strong>：沙滩躺平 / 浮潜 / 看潜店报价（商业观察：Bohol 潜店密度 vs Siquijor）</div></div>
+      <div class="tl-item"><div class="tl-time">17:00 - 18:30</div><div class="tl-content">🌅 Alona 日落 + 海边漫步 → 可顺路约一家 <strong>Alona SPA 做 1h 按摩</strong>（≈500–800 PHP，旅游区最成熟；若 D10 在锡基霍尔已按过，这天可省）</div></div>
+      <div class="tl-item"><div class="tl-time">19:00 - 21:00</div><div class="tl-content">🍽️ <strong>Alona 夜市</strong>：烧烤 + 海鲜大排档，感受 Bohol 旅游区夜经济（vs Siquijor 安静对比明显）</div></div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:12px;">
+      💼 <strong>在地商业观察｜目的地分层：</strong>把 Bohol/Panglao 与 Siquijor 做可观察的对照：连锁品牌密度、房价区间、旅行社/平台露出、餐饮标准化、当地居民与游客共享空间的程度。先比较这些事实，再判断两地究竟是规模差异、客群差异，还是商业模式差异。
+    </div>
+
+    <div class="cost-box">
+      <div class="cost-title">💰 当日费用</div>
+      <span class="cost-item">🚢 渡轮船票：≈1,000–1,200 PHP/人</span>
+      <span class="cost-item">🚐 Tagbilaran→Alona 车费：≈300–500 PHP</span>
+      <span class="cost-item">🍽️ 午/晚餐：≈500 PHP × 2人</span>
+      <span class="cost-item">🏨 住宿（第 1 晚）：≈180–290 RMB</span>
+    </div>
+  </div>
+</div>
+
+<!-- Day 12-13 分隔注释 -->
+<!-- Day 12 -->
+<div class="day-card" id="day-12">
+  <div class="day-header">
+    <div class="day-num">Day 12 &nbsp;|&nbsp; 10月09日（周五）</div>
+    <div class="day-badge badge-sight">🏝️ 薄荷陆地精华日 + 🚢 当晚返宿务</div>
+  </div>
+  <div class="day-body">
+    <div class="route-line">🏝️ Bohol 商业观察（Corella 眼镜猴·Dauis Bee Farm） → Tagbilaran 港返宿务市区</div>
+    <p style="font-size:13.5px;color:var(--text-secondary);margin-bottom:12px;">
+      今天以你的<strong>不潜水商业观察线</strong>为主：上午看 Corella 眼镜猴保护区的保育与票务，午餐在 Dauis 的 Bee Farm 观察农旅、餐饮和零售导流，随后回 Tagbilaran 港乘已确认的船返回宿务，为 <strong>Day 13 周六城市观察日</strong>和 D14 国际返程保留缓冲。建议提前订<strong>私人车 + 司机</strong>；巧克力山需要额外长距离转场，改为时间充足且船票允许时的替代线路。
+    </p>
+
+    <!-- 包车/路线 -->
+    <div style="background:#F0F7FA;border:1px solid var(--ocean-light);border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <p style="font-size:13px;font-weight:700;color:var(--ocean);margin-bottom:10px;">🚐 陆地包车参考</p>
+      <table style="width:100%;font-size:12.5px;border-collapse:collapse;">
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;width:96px;"><strong>车型</strong></td><td style="border-bottom:1px solid #E0E4E8;">薄荷岛常见 <strong>私人 van（含司机）</strong> 全天 ≈1,500–2,500 PHP；或 joiner 拼车团 ≈600–800 PHP/人。</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>主线</strong></td><td style="border-bottom:1px solid #E0E4E8;">Corella 眼镜猴保护区 → Dauis Bohol Bee Farm（午餐与农旅观察）→ Tagbilaran Port。Baclayon 教堂 / 血盟碑只作近港短停备选，Butterfly 中心暂不纳入主线。</td></tr>
+        <tr><td style="padding:5px 8px;"><strong>返程船</strong></td><td>OceanJet <strong>Tagbilaran → Cebu Pier 1</strong> 的具体班次尚未预订；按已出票时间倒排，建议至少提前 60–90 分钟到港。若买不到足够晚的船，先取消 Baclayon，再提前从 Bee Farm 返回，不追赶末班船。</td></tr>
+      </table>
+    </div>
+
+    <!-- 视觉指引 -->
+    <div style="background:#F7FAFC;border:1px solid #D9E4EC;border-radius:14px;padding:18px;margin-bottom:16px;">
+      <p style="font-size:14px;font-weight:800;color:#0E7CAD;margin-bottom:4px;">🗺️ Day 12 实景</p>
+      <p style="font-size:11.5px;color:#7a8a96;margin-bottom:14px;">薄荷地标 + 当晚跨海回宿务（实景照片为维基共享资源真实授权图）</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        <figure style="margin:0;"><img src="images/day12/real/tarsier.jpg" alt="眼镜猴" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🐒 眼镜猴（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day12/real/chocolate_hills.jpg" alt="巧克力山备选" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🌄 巧克力山（D12 备选 · 真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day12/real/bee_farm.jpg" alt="Bee Farm" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🐝 Bee Farm（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day11/real/alona_beach.jpg" alt="Alona" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏖️ 告别 Alona（真实照片）</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-time">08:00 - 08:30</div><div class="tl-content">🍳 早餐、退房；包车司机接站，先确认 Tagbilaran 返程船票和最晚到港时间。</div></div>
+      <div class="tl-item"><div class="tl-time">08:30 - 10:00</div><div class="tl-content">🐒 <strong>Philippine Tarsier Sanctuary</strong> 眼镜猴保护区（08:30 开放；严格静音、禁闪光照相），观察保育规则、讲解和票务。</div></div>
+      <div class="tl-item"><div class="tl-time">10:00 - 11:30</div><div class="tl-content">🚐 从 Corella 前往 Dauis；这是商业观察主线必须保留的转场时间。</div></div>
+      <div class="tl-item"><div class="tl-time">11:30 - 13:30</div><div class="tl-content">🐝 <strong>Bohol Bee Farm</strong> 午餐，观察 farm-to-table、门票/餐饮/零售和住宿之间的导流，可购买蜂蜜与手作。</div></div>
+      <div class="tl-item"><div class="tl-time">13:30 - 15:00</div><div class="tl-content">🚐 返回 Tagbilaran 方向；船票允许时，在 Baclayon Church 或 Blood Compact Site 选择一个短停。</div></div>
+      <div class="tl-item"><div class="tl-time">至少提前 60–90 分钟</div><div class="tl-content">🧳 抵达 <strong>Tagbilaran Port</strong>，取行李、购票/核票、安检登船；具体时间随已出票船班调整。</div></div>
+      <div class="tl-item"><div class="tl-time">按已出票班次</div><div class="tl-content">🚢 OceanJet <strong>Tagbilaran → Cebu Pier 1</strong>，抵宿务后入住市区酒店。</div></div>
+      <div class="tl-item"><div class="tl-time">抵达后</div><div class="tl-content">🏨 抵宿务市区，Grab 入住 <strong>商场附近酒店</strong>（为 D13 市区走访 + D14 早班机都方便）→ 晚餐</div></div>
+    </div>
+
+    <div class="route-stage-shared" style="margin-top:12px;"><strong>巧克力山备选：</strong>Chocolate Hills 位于 Carmen，距离 Corella 和 Dauis 都需要较长陆路转场。只有在你们买到足够晚的返程船、愿意提前出发并取消 Bee Farm 或 Baclayon 时才执行；不与本条商业观察主线同时承诺。</div>
+
+    <div class="callout callout-info" style="margin-top:12px;">
+      💼 <strong>在地商业观察｜农旅与保育：</strong>在 Bee Farm 观察参观、餐饮、零售和住宿怎样互相导流；在眼镜猴保护区观察保育规则、讲解与票务。记录真实消费路径和限制条件，再与国内项目比较，不以一次到访直接判断“成熟”或“可复制”。
+    </div>
+
+    <div class="cost-box">
+      <div class="cost-title">💰 费用（Day 12）</div>
+      <span class="cost-item">🚐 陆地包车/拼车：≈1,500–2,500 PHP/车 或 600–800 PHP/人</span>
+      <span class="cost-item">🎟️ 门票合计：≈500 PHP/人</span>
+      <span class="cost-item">🐝 Bee Farm 午餐：≈400–600 PHP/人</span>
+      <span class="cost-item">🚢 Oceanjet（Bohol→Cebu）：≈1,200 PHP/人</span>
+      <span class="cost-item">🏨 宿务市区酒店：≈200 RMB/晚</span>
+    </div>
+  </div>
+</div>
+
+<!-- Day 13 -->
+<div class="day-card" id="day-13">
+  <div class="day-header">
+    <div class="day-num">Day 13 &nbsp;|&nbsp; 10月10日（周六）</div>
+    <div class="day-badge badge-biz">📊 城市观察 · 文化 · 在地交流日</div>
+  </div>
+  <div class="day-body">
+    <div class="route-line">🏡️ 宿务市区 Cebu City（周六 · 传统市场 / 老城文化 / 现代零售 / IT Park）</div>
+    <p style="font-size:13.5px;color:var(--text-secondary);margin-bottom:12px;">
+      这是为你的<strong>“边旅行边理解当地”</strong>目标专门保留的一天。今天是周六，不把临时高校拜访或商会见面当成确定项目；主线是比较<strong>传统市场、殖民老城、现代商场和 BPO/IT Park</strong>四种城市空间，再用一场提前约好的咖啡交流补充当地视角。
+    </p>
+
+    <!-- 视觉指引 -->
+    <div style="background:#F7FAFC;border:1px solid #D9E4EC;border-radius:14px;padding:18px;margin-bottom:16px;">
+      <p style="font-size:14px;font-weight:800;color:#0E7CAD;margin-bottom:4px;">🗺️ Day 13 实景 · 城市商业地标</p>
+      <p style="font-size:11.5px;color:#7a8a96;margin-bottom:14px;">市场、老街、现代零售与 IT Park——今日观察点（实景照片为维基共享资源真实授权图）</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        <figure style="margin:0;"><img src="images/day13/real/carbon_market.jpg" alt="Carbon 市场" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🛒 Carbon Market（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day13/real/colon_street.jpg" alt="Colon 老街" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏛️ Colon Street 老街（真实照片）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day13/real/taoist_temple.jpg" alt="道观" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">⛩️ Cebu Taoist Temple（取消商场时的可选项）</figcaption></figure>
+        <figure style="margin:0;"><img src="images/day13/real/carbon_market.jpg" alt="市场细节" style="width:100%;border-radius:10px;display:block;border:1px solid #e3e8ec;"><figcaption style="font-size:11px;color:#666;margin-top:5px;text-align:center;">🏪 在地零售生态（真实照片）</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-time">07:30 - 08:00</div><div class="tl-content">🍳 酒店早餐；只带小额现金和随身包，确认 Grab 上下车点</div></div>
+      <div class="tl-item"><div class="tl-time">08:00 - 10:00</div><div class="tl-content">🛒 <strong>Carbon Market + Taboan</strong>：观察传统摊贩、伴手礼经济与现金/GCash 使用；人多时不外露手机，不未经同意近距离拍摊主</div></div>
+      <div class="tl-item"><div class="tl-time">10:00 - 12:00</div><div class="tl-content">🏛️ <strong>Colon Street + Cebu Heritage Monument + 老城教堂区</strong>：把商业街、殖民历史与宗教生活放在同一片区步行理解</div></div>
+      <div class="tl-item"><div class="tl-time">12:00 - 13:15</div><div class="tl-content">🍽️ 老城区或酒店附近午餐 + 休息；<strong>Sugbo Mercado 是夜市，不安排午餐</strong></div></div>
+      <div class="tl-item"><div class="tl-time">13:30 - 15:30</div><div class="tl-content">🏬 <strong>Ayala Center 或 SM City Cebu 二选一</strong>：记录品牌组合、价格带、客流、支付和服务，不在两个商场之间赶路</div></div>
+      <div class="tl-item"><div class="tl-time">15:45 - 17:15</div><div class="tl-content">☕ <strong>Cebu IT Park 咖啡交流</strong>：只在提前约到本地创业者、BPO 从业者、学生或民宿联系人时进行；没有预约就正常逛 IT Park 和 Central Bloc</div></div>
+      <div class="tl-item"><div class="tl-time">17:15 - 18:00</div><div class="tl-content">📝 咖啡休息，整理“看到的事实 / 听到的观点 / 尚待验证的假设”</div></div>
+      <div class="tl-item"><div class="tl-time">18:00 - 20:00</div><div class="tl-content">🍽️ <strong>Sugbo Mercado 晚餐</strong>：观察摊位选品、排队、客单和数字支付；近期曾迁址，出发当天查看官方 Facebook / Instagram 确认位置与营业</div></div>
+      <div class="tl-item"><div class="tl-time">20:00 - 21:00</div><div class="tl-content">回酒店打包行李，设置 D14 04:15 闹钟；次日早班机优先休息</div></div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:12px;">
+      ⛩️ <strong>道观仅作替代：</strong>若你更想看华人社群与宗教文化，可取消下午商场，改去 Cebu Taoist Temple；不要把道观、商场和 IT Park 三处叠加。
+    </div>
+
+    <strong style="font-size:14px;color:#C2410C;">🇨🇳➡️🇵🇭 商业观察 · 从案例出发验证假设</strong>
+    <div style="padding-left:12px;margin:8px 0 6px;">
+      <div class="info-row"><div class="dot dot-red"></div><div class="label">已知样本</div><div class="content">Mixue、MINISO、J&amp;T、Lazada、TikTok Shop、GCash 等说明供应链、加盟和数字化模式已有落地案例；它们只能作为观察起点，不能直接推导新项目一定成立。</div></div>
+      <div class="info-row"><div class="dot dot-green"></div><div class="label">待验证</div><div class="content">① 岛际补货是否真是核心痛点；② sari-sari 是否愿意使用数字化工具；③ 平价餐饮加盟的租金与人工模型；④ 直播电商的语言、履约与信任成本；⑤ 中国供应链相对本地/日韩供应链的真实优势。</div></div>
+      <div class="callout callout-warn" style="margin-top:8px;">
+        ⚠️ <strong>落地提醒：</strong>行业准入、外资比例、最低资本与税务要求会随行业和主体结构不同。旅行中的聊天只能形成线索，不能替代菲律宾律师、会计师和主管部门的正式核验，也不要先假定“找一个本地合伙人”就能解决合规问题。
+      </div>
+    </div>
+
+    <div class="callout callout-info" style="margin-top:12px;">
+      💼 <strong>高校/机构交流备选：</strong>10/10 是周六，只有在出发前已取得对方确认时才前往，不做无预约拜访。若高校交流是核心目标，应把 10/09 周五下午留在宿务，并相应删减薄荷陆地行程；否则本次改约线上会谈或旅行后邮件跟进。
+    </div>
+
+    <div class="note-box">
+      💡 今晚整理“事实 / 观点 / 假设 + 可继续联系的人”，但不要把 D14 马尼拉中转安排成补聊或赶场。D14 只保留一个短半日片区，并按国际航班要求提前返回机场。
+    </div>
+
+    <div class="cost-box">
+      <div class="cost-title">💰 费用（Day 13）</div>
+      <span class="cost-item">🚕 市内交通（Grab/出租）：≈500-800 PHP</span>
+      <span class="cost-item">🍽️ 午餐 + Sugbo Mercado 晚餐：参考 ≈500-800 PHP/人</span>
+      <span class="cost-item">🏛️ 老城/市场：多数免费，个别场馆以现场为准</span>
+      <span class="cost-item">☕ 预约交流：估算 ≈200-400 PHP（主动请对方喝咖啡）</span>
+      <span class="cost-item">🏨 酒店：≈200 RMB/晚（连住至 D14 早班机）</span>
+    </div>
+  </div>
+</div>
+
+<!-- Day 14 -->
+<div class="day-card" id="day-14">
+  <div class="day-header">
+    <div class="day-num">Day 14 &nbsp;|&nbsp; 10月11日（周日）</div>
+    <div class="day-badge badge-return">返程日 · 航班已确认 ✓ · 含马尼拉中转半日游机会！</div>
+  </div>
+  <div class="day-body">
+    <div class="route-line">
+      宿务 CEB <span class="arrow">→</span> 马尼拉 MNL <span style="color:#E07A5F;font-size:11px;">(9h15m 中转!)</span> <span class="arrow">→</span> 香港 HKG
+    </div>
+
+    <!-- Return Flight details -->
+    <div style="background:#FFF8F0;border:1px solid #E0D4B8;border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+      <p style="font-size:13px;font-weight:700;color:#B7791F;margin-bottom:10px;">✈️ 返程航班详情（宿务航空 Cebu Pacific Air）</p>
+      <table style="width:100%;font-size:12.5px;border-collapse:collapse;">
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>06:55</strong></td><td style="border-bottom:1px solid #E0E4E8;">宿务 T1 <strong>CEB</strong></td><td style="border-bottom:1px solid #E0E4E8;">🛫 <strong>5J564</strong> 宿务航空 | 经济舱 | 无餐 | 1h40m</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;background:#E8F5E9;"><strong>08:35</strong></td><td style="background:#E8F5E9;border-bottom:1px solid #E0E4E8;">马尼拉 T3 <strong>MNL</strong></td><td style="background:#E8F5E9;border-bottom:1px solid #E0E4E8;">⏳ 中转 <strong>9h15m</strong> — <em>仅在订单确认行李直挂、航班准点时短暂出机场</em></td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #E0E4E8;"><strong>17:50</strong></td><td style="border-bottom:1px solid #E0E4E8;">马尼拉 T3 <strong>MNL</strong></td><td style="border-bottom:1px solid #E0E4E8;">🛫 <strong>5J114</strong> 宿务航空 | 空客321中 | 经济舱 | 无餐 | 2h30m</td></tr>
+        <tr><td style="padding:5px 8px;"><strong>20:20</strong></td><td>香港 T1 <strong>HKG</strong></td><td>🏁 抵达香港 — 高铁/口岸回深圳</td></tr>
+      </table>
+    </div>
+
+    <!-- Manila Layover Plan -->
+    <div style="background:#F0FAF5;border:2px solid #52B788;border-radius:12px;padding:18px 22px;margin-bottom:16px;">
+      <p style="font-size:15px;font-weight:700;color:#2D6A4F;margin-bottom:12px;">🌆 马尼拉 9h15m 中转方案（实际可用市区时间约 3–4 小时）</p>
+
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">
+        行程单虽标注<strong>行李直挂香港</strong>，仍应在宿务值机时再次确认，并拿到 MNL→HKG 登机牌。宿务航空当前建议国际航班提前 4 小时到机场，因此 17:50 起飞应以 <strong>13:50–14:00 回到 T3</strong> 为目标。只有 CEB→MNL 准点、行李确认直挂、天气和交通正常时才出机场。
+      </p>
+
+      <div class="two-col" style="margin-top:12px;">
+        <div class="sub-card" style="background:white;">
+          <h4 style="color:#2D6A4F;">方案 A：马尼拉老城半日游（推荐 ⭐）</h4>
+          <div class="timeline" style="margin-top:6px;">
+            <div class="tl-item"><div class="tl-time">08:35-09:15</div><div class="tl-content">抵达 MNL T3 → 确认下一段登机牌、登机口与行李状态；只带随身小包</div></div>
+            <div class="tl-item"><div class="tl-time">09:15-10:00</div><div class="tl-content">Grab 到 <strong>Intramuros 王城区</strong>；若预计单程超过 60 分钟，立即取消外出</div></div>
+            <div class="tl-item"><div class="tl-time">10:00-12:15</div><div class="tl-content"><strong>圣地亚哥堡 + 马尼拉大教堂 + 圣奥古斯丁教堂</strong>，三处均在老城范围内步行串联</div></div>
+            <div class="tl-item"><div class="tl-time">12:15-13:00</div><div class="tl-content">🍽️ 王城区简餐；不再追加国家博物馆、Makati、BGC 或 MOA</div></div>
+            <div class="tl-item"><div class="tl-time">13:00</div><div class="tl-content">叫 Grab 返回 MNL T3；目标 13:50–14:00 到达</div></div>
+            <div class="tl-item"><div class="tl-time">14:00-17:50</div><div class="tl-content">国际出境检查、安检、寻找登机口、候机；真正的菲律宾离境手续在这里完成</div></div>
+          </div>
+          <div class="callout callout-info" style="margin-top:10px;">
+            💡 王城区是西班牙殖民时期核心，石墙围绕，适合步行。全程 Grab 打车，安全便捷。
+          </div>
+        </div>
+
+        <div class="sub-card" style="background:white;">
+          <h4 style="color:#2D6A4F;">方案 B：BGC 单片区现代都市体验</h4>
+          <div class="timeline" style="margin-top:6px;">
+            <div class="tl-item"><div class="tl-time">09:15</div><div class="tl-content">Grab 到 <strong>Bonifacio Global City (BGC)</strong>；按实时路况决定是否成行</div></div>
+            <div class="tl-item"><div class="tl-time">10:00-12:15</div><div class="tl-content">BGC High Street + 咖啡 + 现代零售观察，只在同一片区步行</div></div>
+            <div class="tl-item"><div class="tl-time">12:15-13:00</div><div class="tl-content">🍽️ BGC 简餐，提前叫车；不再串联 Makati、Ayala Museum 或 MOA</div></div>
+            <div class="tl-item"><div class="tl-time">13:00</div><div class="tl-content">Grab 返回 MNL T3，目标 13:50–14:00 到达</div></div>
+            <div class="tl-item"><div class="tl-time">14:00-17:50</div><div class="tl-content">国际出境检查、安检和候机</div></div>
+          </div>
+          <div class="callout callout-warn" style="margin-top:10px;">
+            ⚠️ BGC 相对适合短时停留，但马尼拉路况不可预测；13:00 必须返程，实时路况变差就提前离开。
+          </div>
+        </div>
+      </div>
+
+      <!-- Safety tips for Manila -->
+      <div class="callout callout-danger" style="margin-top:12px;">
+        <strong>🛡️ 马尼拉出行安全要点：</strong>
+        <ul style="margin:6px 0 0 18px;font-size:12.5px;line-height:1.7;">
+          <li>只用 <strong>Grab</strong> 打车，不拦路边出租车；上车前核对车牌</li>
+          <li>手机不外露，斜挎包贴身，BGC/王城区白天较安全</li>
+          <li>避免 Quiapo/Divisoria 等拥挤市场区域（扒窃高发）</li>
+          <li>13:00 必须离开市区回机场方向，目标 14:00 前回到 T3；不要把“柜台关闭前赶到”当作计划</li>
+          <li>随身携带护照复印件 + 航班信息页（出机场可能被查）</li>
+        </ul>
+      </div>
+
+      <div class="callout callout-info" style="margin-top:8px;">
+        <strong>💡 如果不想出机场：</strong>T3 有不错的餐饮区（4楼美食广场）、免税店、休息室（可用信用卡进）。也可以在 T3 找个咖啡厅休息、整理照片、写旅行日记。
+      </div>
+    </div>
+
+    <!-- Timeline summary -->
+    <div class="timeline" style="margin-top:16px;">
+      <div class="tl-item">
+        <div class="tl-time">04:30</div>
+        <div class="tl-content">酒店退房出发 → 宿务 MCIA（预留 2h+ 到机场）</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">05:00 - 06:25</div>
+        <div class="tl-content">值机、安检、候机（宿务航空建议提前 90min 到）</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">06:55 - 08:35</div>
+        <div class="tl-content">✈️ <strong>CEB → MNL</strong>（5J564，飞行 1h40m）— 在宿务值机时再次确认行李直挂香港及下一段登机牌</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">08:35 - 17:50</div>
+        <div class="tl-content">🌆 <strong>马尼拉中转 9h15m</strong> → 准点时执行单片区短行程，13:00 返机场；延误或天气异常则留在 T3</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">17:50 - 20:20</div>
+        <div class="tl-content">✈️ <strong>MNL → HKG</strong>（5J114，飞行 2h30m）— 抵达香港</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">20:20+</div>
+        <div class="tl-content">入境香港 → 高铁/口岸返回深圳 🏠</div>
+      </div>
+    </div>
+
+    <div class="callout callout-warn" style="margin-top:12px;">
+      <strong>⏰ 免签临界确认：</strong>9/28 入境 + 10/11 办理国际出境 = 正好第 14 天。CEB→MNL 是菲律宾国内段，不能视作已经离境；务必在马尼拉留足国际出境时间，不要改签到 10/12。若航班发生大面积取消，立即联系航空公司与机场移民部门，不自行假定可以顺延。
+    </div>
+
+    <div class="cost-box">
+      <div class="cost-title">💰 当日费用</div>
+      <span class="cost-item">酒店（最后一晚宿务）：≈200 RMB</span>
+      <span class="cost-item">MCIA→机场交通：≈150 PHP（Grab 早班）</span>
+      <span class="cost-item">早餐：200 PHP（打包或在机场吃）</span>
+      <span class="cost-item">马尼拉 Grab 往返：≈800-1200 PHP（如出机场）</span>
+      <span class="cost-item">午餐（马尼拉）：≈500-800 PHP × 2人</span>
+      <span class="cost-item">香港→深圳高铁：≈200 RMB</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 费用汇总 ===== -->
+<h2 class="section-title" id="budget"><span class="icon">💰</span> 费用预算汇总（不含机票）</h2>
+
+<table class="budget-table">
+  <tr><th>对象</th><th style="width:150px">总费用（RMB）</th><th>构成</th></tr>
+  <tr class="total-row"><td><strong>🤿 潜水者（小伙伴）</strong></td><td><strong>≈ ¥5,000 上限情景</strong></td><td>按墨宝 6 潜计算；D5 不潜时应按 4 潜正式报价下调</td></tr>
+  <tr class="total-row"><td><strong>🚶 不潜水者（你）</strong></td><td><strong>≈ ¥3,900</strong></td><td>共同分摊 ¥3,575 + 替代活动 ¥320</td></tr>
+  <tr class="total-row"><td><strong>两人合计</strong></td><td><strong>≈ ¥8,900 上限情景</strong></td><td>按小伙伴 D5 继续潜水计算；不含机票，可选 AOW 另计</td></tr>
+</table>
+
+<div class="callout callout-warn" style="margin-top:12px;">
+  <strong>预算使用方式：</strong>¥8,900 是按小伙伴 Day 5 继续潜水计算的参考上限，不是锁定价格；若 D5 不潜水，待潜店给出 4 潜报价后下调。建议两人另留 <strong>¥1,500–2,500 机动金</strong>，用于船班变化、临时包车、天气取消后的住宿和餐饮；机动金未计入上表。
+</div>
+
+<table class="budget-table" style="margin-top:18px;">
+  <tr><th colspan="4" style="text-align:left;background:#F0F7FA;color:#0E7CAD;">① 共同费用（两人一起，各摊一半）</th></tr>
+  <tr><th>项目</th><th>两人合计（PHP）</th><th>两人合计（RMB）</th><th>每人</th></tr>
+  <tr><td>住宿 13 晚（两人一间）</td><td>--</td><td>≈3,100</td><td>≈1,550</td></tr>
+  <tr><td>餐饮 14 天</td><td>≈16,800</td><td>≈1,830</td><td>≈915</td></tr>
+  <tr><td>陆路交通（巴士/三轮/包车/摩托）</td><td>≈5,800</td><td>≈630</td><td>≈315</td></tr>
+  <tr><td>渡轮 3 段（D8/D11/D12）</td><td>≈6,200</td><td>≈670</td><td>≈335</td></tr>
+  <tr><td>共同门票（鲸鲨/Tumalog/Cambugahay 等）</td><td>≈3,300</td><td>≈360</td><td>≈180</td></tr>
+  <tr><td>行前准备 + 高铁往返</td><td>--</td><td>≈560</td><td>≈280</td></tr>
+  <tr class="total-row"><td><strong>共同小计</strong></td><td>--</td><td><strong>≈7,150</strong></td><td><strong>≈3,575</strong></td></tr>
+</table>
+
+<table class="budget-table" style="margin-top:18px;">
+  <tr><th colspan="4" style="text-align:left;background:#EAF3FB;color:#0E6FA8;">② 潜水者独有（小伙伴）</th></tr>
+  <tr><th>项目</th><th>金额（PHP）</th><th>金额（RMB）</th><th>备注</th></tr>
+  <tr><td>Moalboal 4 潜基础 / 6 潜备选</td><td>4 潜待报价 / 6 潜 7,200</td><td>待报价 / ≈783</td><td>D5 是否潜水最迟 D4 晚确认</td></tr>
+  <tr><td>Siquijor 3 潜</td><td>≈5,200</td><td>≈564</td><td>Ustory Divers</td></tr>
+  <tr><td>潜导小费</td><td>600–1,200</td><td>≈100</td><td>全程约 7–9 潜，按实际次数给</td></tr>
+  <tr><td>（可选）薄荷 AOW 考证</td><td>--</td><td>+2,400~</td><td>当前行程未安排课程；如决定参加，须让潜店确认课时并删减薄荷陆地行程</td></tr>
+  <tr class="total-row"><td><strong>潜水者独有小计</strong></td><td>--</td><td><strong>≈1,450</strong></td><td>不含可选 AOW</td></tr>
+</table>
+
+<table class="budget-table" style="margin-top:18px;">
+  <tr><th colspan="4" style="text-align:left;background:#FFF8F0;color:#B26A00;">③ 不潜水者独有（你）</th></tr>
+  <tr><th>项目</th><th>金额（PHP）</th><th>金额（RMB）</th><th>备注</th></tr>
+  <tr><td>Kawasan 峡谷跳水（含向导装备午餐）</td><td>1,500</td><td>≈163</td><td>Badian</td></tr>
+  <tr><td>Osmeña Peak 日出（门票+向导）</td><td>200–300</td><td>≈27</td><td>Dalaguete</td></tr>
+  <tr><td>White Beach 交通/门票</td><td>300–500</td><td>≈43</td><td>Basdaku</td></tr>
+  <tr><td>沙丁鱼浮潜装备租</td><td>200–250</td><td>≈24</td><td>Panagsama 岸边</td></tr>
+  <tr><td>按摩 SPA（D10 锡基霍尔）</td><td>450–700</td><td>≈65</td><td>1.5h Hilot/精油</td></tr>
+  <tr class="total-row"><td><strong>不潜水者独有小计</strong></td><td>--</td><td><strong>≈320</strong></td><td></td></tr>
+</table>
+
+<div style="background:#FFF8E6;border:1px solid #EAD9A0;border-radius:12px;padding:16px 18px;margin-top:18px;">
+  <p style="font-size:13.5px;font-weight:800;color:#8a6d00;margin-bottom:8px;">💵 现金准备建议（比索）</p>
+  <p style="font-size:12.5px;color:#555;line-height:1.75;">
+    岛上小店/三轮车/市场/门票/潜导小费多为<b>现金</b>。两人全程现金约 <b>43,000 PHP</b>，建议共换 <b>45,000 PHP（≈¥4,900）</b> 留缓冲：餐饮 ≈16,000 + 陆路交通 ≈5,800 + 渡轮 ≈6,200 + 门票活动 ≈6,500 + 小费杂费 ≈2,000 + 机动 ≈5,000。<b>渡轮 3 段（≈6,200）单独备零钱</b>，码头售票常只收现金。
+    <br/>可刷卡/预付：住宿 13 晚（≈¥3,100）、潜店项目（墨宝先确认 4 潜报价，D5 加潜待定；锡基霍尔 3 潜参考 ¥564）、Grab 绑卡、商场大额。
+    <br/>兑换策略：国内换少量美元 → 当地市区/商场换比索（机场汇率差）；或银联卡 ATM 取现。<b>锡基霍尔 ATM 少，D8 上岛前在 Dumaguete/宿务取够</b>。
+  </p>
+</div>
+
+<p style="font-size:12px;color:var(--text-muted);margin-top:8px;">
+  * 以上费用均含参考价或估算成分，实际以付款当日汇率、酒店/船司/潜店报价为准。暂按 1 RMB ≈ 9.2 PHP 换算。<strong>按小伙伴墨宝 6 潜计算，两人参考上限约 ¥8,900（不含机票与机动金）；若 Day 5 不潜，需用 4 潜报价重新计算</strong>。机票和酒店为动态定价，出行前请在航空公司、酒店平台及对应运营方确认并预订。
+</p>
+
+<!-- ===== 出发前核对 ===== -->
+<h2 class="section-title" id="final-check"><span class="icon">✅</span> 出发前 72 小时 · 最终核对清单</h2>
+
+<div class="final-box">
+  <h3 style="margin-bottom:12px;font-size:15px;">✅ 逐项打钩，避免到了口岸才发现缺东西</h3>
+  <ul class="checklist" style="border:none;">
+    <li>eTravel 已提交并打印/截图二维码（<a href="https://etravel.gov.ph" target="_blank" rel="noopener" style="color:#185FA5;font-weight:600;text-decoration:underline;">etravel.gov.ph ↗</a>）</li>
+    <li>护照有效期 ≥ 6 个月，复印件 + 电子版已存（与原件分开放）</li>
+    <li>往返机票 + 全程酒店订单已存（手机 + 打印各一份）</li>
+    <li>国际机票已确认（HKG→MNL→CEB 同一订单；在 MNL 提取行李过海关后交 Transfer Desk）</li>
+    <li>各段酒店已核对：宿务市区近南巴士站首晚、Moalboal 3 晚、Oslob 2 晚、Siquijor 3 晚、Bohol、宿务末晚</li>
+    <li>潜店已联系：Moalboal 先确认 D3–4 的 4 潜报价，并约定 D5 两潜最晚确认时间；Siquijor 确认 3 潜；薄荷 AOW 当前未排入日程</li>
+    <li>旅行险 + 潜水险已购（含<strong>医疗撤离 + 天气取消</strong>）</li>
+    <li>电话卡 / eSIM 已备；Grab、Google Maps 离线地图已装</li>
+    <li>美元现金 + 银联卡；不随身带大量现金，两人分散存放</li>
+    <li>常用药 + 防晒(reef-safe) + 晕船药 + 防水袋已打包</li>
+    <li>两人互换证件照片 / 订单备份（云端 + 各自手机）</li>
+    <li>锡基霍尔交通已决定：优先预约司机/包车；如自驾，已确认有效摩托车驾照、官方英文翻译、租车保险和两顶头盔</li>
+  </ul>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <p>🦊 整理 by Kai · 双轨行程修订：2026-09-07</p>
+  <p style="margin-top:4px;">祝旅途愉快！🤿🐋🏝️</p>
+</div>
+
+</main>
+</div>
+
+<script src="map/leaflet.js"></script>
+<script src="map/world-atlas.js"></script>
+<script>
+  (() => {
+    const sidebar = document.querySelector('.toc-sidebar');
+    const toggle = document.querySelector('.toc-toggle');
+    const nav = document.querySelector('.toc-nav');
+    const links = [...document.querySelectorAll('.toc-link')];
+    const targets = links
+      .map((link) => document.querySelector(link.getAttribute('href')))
+      .filter(Boolean);
+
+    const setMenuOpen = (open) => {
+      sidebar.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.textContent = open ? '×' : '☰';
+      toggle.title = open ? '收起目录' : '展开目录';
+    };
+
+    const setActive = (id) => {
+      links.forEach((link) => {
+        const active = link.getAttribute('href') === `#${id}`;
+        link.classList.toggle('active', active);
+        if (active) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+    };
+
+    toggle.addEventListener('click', () => {
+      setMenuOpen(!sidebar.classList.contains('is-open'));
+    });
+
+    nav.addEventListener('click', (event) => {
+      const link = event.target.closest('.toc-link');
+      if (!link) return;
+      setActive(link.getAttribute('href').slice(1));
+      if (window.matchMedia('(max-width: 900px)').matches) setMenuOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && sidebar.classList.contains('is-open')) setMenuOpen(false);
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (visible[0]) setActive(visible[0].target.id);
+    }, { rootMargin: '-12% 0px -72% 0px', threshold: 0 });
+
+    targets.forEach((target) => observer.observe(target));
+    setActive(window.location.hash.slice(1) || 'top');
+  })();
+
+  (() => {
+    const mapElement = document.getElementById('trip-map');
+    const mapCard = document.querySelector('.route-map-card');
+    if (!mapElement || !mapCard) return;
+
+    if (!window.L) {
+      mapCard.classList.add('map-unavailable');
+      mapElement.innerHTML = '<div class="map-loading">本地地图组件未载入；下方分段路线与时间不受影响。</div>';
+      return;
+    }
+
+    const points = {
+      shenzhen: [22.5431, 114.0579],
+      hongkong: [22.3080, 113.9185],
+      manila: [14.5086, 121.0198],
+      cebu: [10.3157, 123.8854],
+      moalboal: [9.9437, 123.3992],
+      oslob: [9.5217, 123.4315],
+      liloanPort: [9.4169, 123.3075],
+      sibulan: [9.3574, 123.2847],
+      dumaguete: [9.3077, 123.3089],
+      siquijorPort: [9.2180, 123.5123],
+      sanjuan: [9.1750, 123.4730],
+      tagbilaranPort: [9.6489, 123.8468],
+      panglao: [9.5487, 123.7725],
+      cebuPier1: [10.2923, 123.9090]
+    };
+
+    const routeStops = [
+      { number: 1, name: '深圳', day: 'D1 / D14', time: '9/28 05:30 出发 · 10/11 夜间返回', note: '深圳湾口岸往返香港机场。', coords: points.shenzhen },
+      { number: 2, name: '香港 HKG', day: 'D1 / D14', time: '9/28 09:25 起飞 · 10/11 20:20 抵达', note: '国际航班起终点。', coords: points.hongkong },
+      { number: 3, name: '马尼拉 MNL', day: 'D1 / D14', time: 'D1 11:50–15:00 入境转机 · D14 08:35–17:50', note: '去程在此完成入境、提取行李与海关；返程可执行单片区短行程。', coords: points.manila },
+      { number: 4, name: '宿务 Cebu City', day: 'D1–2 / D12–14', time: 'D1 18:05 入住 · D13 全天城市观察', note: '全程陆岛路线起点，也是返程前的缓冲城市。', coords: points.cebu },
+      { number: 5, name: '墨宝 Moalboal', day: 'D2–5', time: '9/29–10/2 · 连住 3 晚', note: 'D3–4 伙伴潜水、你走替代线；D5 伙伴可能不潜水，可与你共同走市场、午餐与海岸收尾线。', coords: points.moalboal },
+      { number: 6, name: '奥斯洛布 Oslob', day: 'D6–7', time: '10/3–10/4', note: 'Tumalog Falls、鲸鲨观察；Sumilon 仅作体力与海况允许时的可选项。', coords: points.oslob },
+      { number: 7, name: '锡基霍尔 San Juan', day: 'D8–10', time: '10/5–10/7 · 连住 3 晚', note: 'D8 从 Siquijor Port 陆路到 San Juan；环岛自然景点、文化交流，以及潜水/在地探索双轨日。', coords: points.sanjuan },
+      { number: 8, name: '薄荷 Panglao', day: 'D11', time: '10/8 · 住 1 晚', note: 'Tagbilaran Port 下船后到 Panglao/Alona；D12 白天完成商业观察，按船票返宿务。', coords: points.panglao }
+    ];
+
+    const transitStops = [
+      { name: 'Liloan Port（Santander）', day: 'D8 · 10/5', time: '07:00–09:30', note: '从 Oslob 到 Liloan Port，乘 Maayo Shipping 到 Sibulan；具体船班临行前确认。', coords: points.liloanPort },
+      { name: 'Sibulan Port', day: 'D8 · 10/5', time: '抵达后转港', note: '下船后转 tricycle/车辆去 Dumaguete 港。', coords: points.sibulan },
+      { name: 'Dumaguete Port', day: 'D8 · 10/5', time: '上午至中午', note: '按已出票班次前往 Siquijor Port，预留陆路转港缓冲。', coords: points.dumaguete },
+      { name: 'Siquijor Port', day: 'D8 · 10/5', time: '抵达后 → San Juan', note: '渡轮抵达点；地图不再把港口与 San Juan 住宿区合并。', coords: points.siquijorPort },
+      { name: 'Tagbilaran Port', day: 'D11/D12', time: 'D11 抵达 · D12 返程', note: 'D11 下船到 Panglao；D12 从这里乘已出票船回 Cebu Pier 1。', coords: points.tagbilaranPort },
+      { name: 'Panglao / Alona', day: 'D11 · 10/8', time: '入住 1 晚', note: 'D11 的住宿和夜间活动区域；不代表 Tagbilaran 港口位置。', coords: points.panglao },
+      { name: 'Cebu Pier 1', day: 'D12 · 10/9', time: '返宿务抵达点', note: 'Tagbilaran → Cebu 的渡轮抵达点，之后去宿务市区酒店。', coords: points.cebuPier1 }
+    ];
+
+    const attractions = [
+      { name: 'Panagsama 沙丁鱼与 House Reef', day: 'D3 · 9/30', time: '08:30–10:30', note: '伙伴岸潜；你只在向导陪同下选择沙丁鱼浮潜。', type: 'dive', label: '潜', coords: [9.9482, 123.3692] },
+      { name: 'Pescador Island', day: 'D3–4', time: '潜水线 10:30 前后', note: 'Google 名称匹配存在歧义，地图仅作外岛潜点海域示意；具体下船点以潜店当天确认。', type: 'dive', label: '潜', coords: [9.9167, 123.3500] },
+      { name: 'White Beach / Basdaku', day: 'D3 · 9/30', time: '13:30–17:00', note: '以 Basdaku 实际海滩位置标记；散步、咖啡与旅游服务定价观察。', type: 'rest', label: '休', coords: [9.9846, 123.3692] },
+      { name: 'Kawasan Falls', day: 'D4 · 10/1', time: 'A 线 08:00–13:00', note: '与 Moalboal 镇区观察二选一，必须通过认证向导。', type: 'sight', label: '景', coords: [9.8028, 123.3747] },
+      { name: 'Moalboal Poblacion', day: 'D4–5', time: 'D4 09:00 或 D5 09:30', note: '公共市场、小店、餐饮和本地生活观察。', type: 'local', label: '访', coords: [9.9384, 123.3923] },
+      { name: 'Osmeña Peak', day: 'D5 · 10/2', time: '备选 03:00–上午', note: '仅天气稳定且愿意早起时执行；选择后取消市场线。', type: 'sight', label: '景', coords: [9.8284, 123.4494] },
+      { name: 'Tumalog Falls', day: 'D6 或 D7', time: 'D6 13:30–16:30 / D7 09:30–11:30', note: '两天选一个窗口，不重复赶场。', type: 'sight', label: '景', coords: [9.4894, 123.3698] },
+      { name: 'Tan-awan 鲸鲨观察区', day: 'D7 · 10/4', time: '06:10 登记 · 06:40–07:30 观察', note: '可浮潜或留在船上；不触碰、不追逐、不使用闪光灯。', type: 'dive', label: '潜', coords: [9.4638, 123.3822] },
+      { name: 'Sumilon Island', day: 'D7 · 10/4', time: '可选 14:00–17:30', note: '只在海况、船班和体力都合适时参加。', type: 'rest', label: '休', coords: [9.4320, 123.3900] },
+      { name: 'Old Enchanted Balete Tree', day: 'D8 或 D9', time: 'D8 15:00–17:00 / D9 08:30', note: '以 Google 返回的实际树址标记；转船日晚点就取消，也可放到 D9 环岛。', type: 'sight', label: '景', coords: [9.1209, 123.5754] },
+      { name: 'Cambugahay Falls', day: 'D9 · 10/6', time: '08:30–10:00', note: '和 Balete Tree 同段；跳水与秋千量力而行。', type: 'sight', label: '景', coords: [9.1387, 123.6275] },
+      { name: 'Salagdoong Beach', day: 'D9 · 10/6', time: '10:00–12:00', note: '东岸 Maria 区海滩与跳台；不会游泳不下深水区。', type: 'rest', label: '休', coords: [9.2131, 123.6816] },
+      { name: 'Paliton Beach', day: 'D8–10', time: '17:00–18:30 日落', note: '多日可用的固定汇合点，以当天交通与天气决定。', type: 'rest', label: '休', coords: [9.1832, 123.4569] },
+      { name: 'Tubod Marine Sanctuary', day: 'D10 · 10/7', time: '08:00–11:30 / 14:00–16:30', note: '伙伴三潜；你在 San Juan 走生活区、咖啡与 SPA 线。地图点按 Tubod 实际海洋保护区位置标记。', type: 'dive', label: '潜', coords: [9.1416, 123.5091] },
+      { name: 'Alona Beach', day: 'D11 · 10/8', time: '14:00–18:30', note: '沙滩、潜店报价观察、日落；SPA 为可选。', type: 'rest', label: '休', coords: [9.5487, 123.7725] },
+      { name: 'Philippine Tarsier Sanctuary', day: 'D12 · 10/9', time: '08:30–10:00', note: '按保护区 08:30 开放安排；保持安静，禁止闪光灯。', type: 'sight', label: '景', coords: [9.6905, 123.9527] },
+      { name: 'Chocolate Hills', day: 'D12 · 10/9', time: '备选；需删减 Bee Farm 或近港停留', note: 'Carmen 观景区；与商业观察主线不同时承诺。', type: 'sight', label: '景', coords: [9.7986, 124.1675] },
+      { name: 'Bohol Bee Farm', day: 'D12 · 10/9', time: '11:30–13:30', note: 'Dauis 主线午餐，同时观察农旅、餐饮、零售的导流关系。', type: 'local', label: '访', coords: [9.5757, 123.8271] },
+      { name: 'Carbon Market / Taboan', day: 'D13 · 10/10', time: '08:00–10:00', note: '传统零售与现金/GCash 使用观察；拍摄前先征得同意。', type: 'local', label: '访', coords: [10.2928, 123.8988] },
+      { name: 'Colon Street 老城', day: 'D13 · 10/10', time: '10:00–12:00', note: '老城商业街、历史遗迹与宗教空间步行线。', type: 'local', label: '访', coords: [10.2950, 123.8990] },
+      { name: 'Cebu IT Park', day: 'D13 · 10/10', time: '15:45–17:15', note: '有预约则咖啡交流；无预约就观察园区与 Central Bloc。Sugbo Mercado 晚餐地点需当天再确认。', type: 'local', label: '访', coords: [10.3303, 123.9060] },
+      { name: 'Intramuros 王城区', day: 'D14 · 10/11', time: '方案 A 10:00–13:00', note: '返程中转只选一个片区；13:00 必须叫车回机场。', type: 'sight', label: '景', coords: [14.5896, 120.9747] },
+      { name: 'BGC High Street', day: 'D14 · 10/11', time: '方案 B 10:00–13:00', note: '与王城区二选一；实时路况变差则提前返回 T3。', type: 'local', label: '访', coords: [14.5507, 121.0507] }
+    ];
+
+    const map = L.map(mapElement, {
+      zoomControl: true,
+      scrollWheelZoom: false,
+      center: [12, 122],
+      zoom: 5
+    });
+    const hasLocalAtlas = window.localWorldAtlas && window.localWorldAtlas.type === 'FeatureCollection';
+
+    if (hasLocalAtlas) {
+      try {
+        L.geoJSON(window.localWorldAtlas, {
+          style: {
+            color: '#8AA28C',
+            weight: 1,
+            opacity: 0.9,
+            fillColor: '#DCE9D8',
+            fillOpacity: 0.88
+          }
+        }).addTo(map);
+      } catch (error) {
+        mapCard.classList.add('map-unavailable');
+        mapElement.insertAdjacentHTML('afterbegin', '<div class="map-loading">本地地理轮廓未载入；路线标记仍可查看。</div>');
+      }
+    } else {
+      mapCard.classList.add('map-unavailable');
+      mapElement.insertAdjacentHTML('afterbegin', '<div class="map-loading">本地地理数据未载入；路线标记仍可查看。</div>');
+    }
+
+    map.attributionControl.addAttribution('地理底图：Natural Earth（公共领域，简化版）');
+
+    const popupHtml = (item) =>
+      '<div class="map-popup-day">' + item.day + '</div>' +
+      '<div class="map-popup-name">' + item.name + '</div>' +
+      '<div class="map-popup-time">' + item.time + '</div>' +
+      '<div class="map-popup-note">' + item.note + '</div>';
+
+    const compactMapDay = (day) => day
+      .split('·')[0]
+      .trim()
+      .replace(/\s+/g, '')
+      .replace('或', '/');
+
+    routeStops.forEach((stop) => {
+      const icon = L.divIcon({
+        className: 'route-marker-wrap',
+        html: '<span class="route-marker-combo"><span class="route-marker">' + stop.number + '</span><span class="route-day-label">' + compactMapDay(stop.day) + '</span></span>',
+        iconSize: [78, 30],
+        iconAnchor: [15, 15],
+        popupAnchor: [0, -15]
+      });
+      L.marker(stop.coords, { icon: icon })
+        .addTo(map)
+        .bindTooltip(stop.number + ' · ' + stop.name, { direction: 'top', offset: [0, -12] })
+        .bindPopup(popupHtml(stop));
+    });
+
+    transitStops.forEach((stop) => {
+      const icon = L.divIcon({
+        className: 'route-marker-wrap',
+        html: '<span class="route-marker-combo"><span class="route-marker route-marker-port">⚓</span><span class="route-day-label">' + compactMapDay(stop.day) + '</span></span>',
+        iconSize: [72, 25],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -12]
+      });
+      L.marker(stop.coords, { icon: icon })
+        .addTo(map)
+        .bindTooltip(stop.name, { direction: 'top', offset: [0, -10] })
+        .bindPopup(popupHtml(stop));
+    });
+
+    const lineStyles = {
+      flight: { color: '#D4634B', weight: 3, opacity: 0.9, dashArray: '9 7' },
+      land: { color: '#3D5A80', weight: 4, opacity: 0.9 },
+      ferry: { color: '#2A9D8F', weight: 4, opacity: 0.9, dashArray: '2 8' }
+    };
+
+    const routeSegments = [
+      { mode: 'land', label: 'D1 深圳 → 香港机场', coords: [points.shenzhen, points.hongkong] },
+      { mode: 'flight', label: 'D1 香港 → 马尼拉 → 宿务', coords: [points.hongkong, points.manila, points.cebu] },
+      { mode: 'land', label: 'D2–8 宿务南线 → Liloan Port', coords: [points.cebu, points.moalboal, points.oslob, points.liloanPort] },
+      { mode: 'ferry', label: 'D8 Liloan Port → Sibulan Port', coords: [points.liloanPort, points.sibulan] },
+      { mode: 'land', label: 'D8 Sibulan → Dumaguete 港', coords: [points.sibulan, points.dumaguete] },
+      { mode: 'ferry', label: 'D8 Dumaguete → Siquijor Port', coords: [points.dumaguete, points.siquijorPort] },
+      { mode: 'land', label: 'D8 Siquijor Port → San Juan', coords: [points.siquijorPort, points.sanjuan] },
+      { mode: 'ferry', label: 'D11 Siquijor Port → Tagbilaran Port', coords: [points.siquijorPort, points.tagbilaranPort] },
+      { mode: 'land', label: 'D11 Tagbilaran Port → Panglao', coords: [points.tagbilaranPort, points.panglao] },
+      { mode: 'land', label: 'D12 Panglao → Tagbilaran Port', coords: [points.panglao, points.tagbilaranPort] },
+      { mode: 'ferry', label: 'D12 Tagbilaran Port → Cebu Pier 1', coords: [points.tagbilaranPort, points.cebuPier1] },
+      { mode: 'flight', label: 'D14 宿务 → 马尼拉 → 香港', coords: [points.cebu, points.manila, points.hongkong] },
+      { mode: 'land', label: 'D14 香港 → 深圳', coords: [points.hongkong, points.shenzhen] }
+    ];
+
+    routeSegments.forEach((segment) => {
+      L.polyline(segment.coords, lineStyles[segment.mode]).addTo(map).bindTooltip(segment.label);
+    });
+
+    const poiLayer = L.layerGroup();
+    attractions.forEach((place) => {
+      const icon = L.divIcon({
+        className: 'poi-marker-wrap',
+        html: '<span class="poi-marker-combo"><span class="poi-marker poi-' + place.type + '">' + place.label + '</span><span class="poi-day-label">' + compactMapDay(place.day) + '</span></span>',
+        iconSize: [64, 23],
+        iconAnchor: [11, 11],
+        popupAnchor: [0, -11]
+      });
+      L.marker(place.coords, { icon: icon })
+        .bindTooltip(place.name, { direction: 'top', offset: [0, -9] })
+        .bindPopup(popupHtml(place))
+        .addTo(poiLayer);
+    });
+
+    const allBounds = L.latLngBounds(routeStops.concat(transitStops).map((stop) => stop.coords));
+    const syncPoiLayer = () => {
+      if (map.getZoom() >= 8 && !map.hasLayer(poiLayer)) poiLayer.addTo(map);
+      if (map.getZoom() < 8 && map.hasLayer(poiLayer)) map.removeLayer(poiLayer);
+    };
+
+    map.fitBounds(allBounds, { padding: [28, 28] });
+    map.on('zoomend', syncPoiLayer);
+    syncPoiLayer();
+
+    const mapViewButtons = [...document.querySelectorAll('.map-view-button')];
+    const setMapView = (view) => {
+      mapViewButtons.forEach((item) => {
+          const active = item.dataset.mapView === view;
+          item.classList.toggle('active', active);
+          item.setAttribute('aria-pressed', String(active));
+      });
+      if (view === 'visayas') map.setView([9.74, 123.72], 9);
+      else map.fitBounds(allBounds, { padding: [28, 28] });
+    };
+
+    mapViewButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        setMapView(button.dataset.mapView);
+      });
+    });
+
+    if (new URLSearchParams(window.location.search).get('map') === 'visayas') {
+      setMapView('visayas');
+    }
+
+    const loading = mapElement.querySelector('.map-loading');
+    if (loading) loading.remove();
+  })();
+</script>
+
+</body>
+</html>
