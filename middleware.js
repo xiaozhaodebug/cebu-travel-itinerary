@@ -1,3 +1,5 @@
+import { next } from '@vercel/edge';
+
 export const config = {
   matcher: ['/((?!_next|api|favicon.ico|.*\\.).*)'],
 };
@@ -10,8 +12,8 @@ export default function middleware(req) {
     const decoded = atob(authValue);
     const [user, pwd] = decoded.split(':');
 
-    if (user === 'zhaoshao' && pwd === 'ab19990304') {
-      return new Response(null, { status: 200 });
+    if (user === 'zhaoshao' && pwd === '12345678') {
+      return next();
     }
   }
 
